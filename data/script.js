@@ -4,6 +4,15 @@ const {Preferences} = Cu.import("resource://gre/modules/Preferences.jsm", {});
 const {Kinto} = Cu.import("resource://services-common/kinto-offline-client.js", {});
 const {FirefoxAdapter} = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
 
+const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
+const gBlocklistClients = {
+  [BlocklistClients.OneCRLBlocklistClient.collectionName]: BlocklistClients.OneCRLBlocklistClient,
+  [BlocklistClients.AddonBlocklistClient.collectionName]: BlocklistClients.AddonBlocklistClient,
+  [BlocklistClients.GfxBlocklistClient.collectionName]: BlocklistClients.GfxBlocklistClient,
+  [BlocklistClients.PluginBlocklistClient.collectionName]: BlocklistClients.PluginBlocklistClient,
+  [BlocklistClients.PinningPreloadClient.collectionName]: BlocklistClients.PinningPreloadClient
+};
+
 
 function main() {
   showPollingStatus();
@@ -13,13 +22,17 @@ function main() {
   const updater = Cu.import("resource://services-common/blocklist-updater.js", {});
   document.getElementById("run-poll").onclick = () => {
     updater.checkVersions()
-      .then(showPollingStatus);
+      .then(() => {
+        showPollingStatus();
+        showBlocklistStatus();
+      });
   }
 
   // Reset local data.
   document.getElementById("clear-data").onclick = () => {
     Preferences.reset("services.blocklist.last_update_seconds");
     Preferences.reset("services.blocklist.last_etag");
+    showPollingStatus();
   }
 }
 
@@ -67,6 +80,7 @@ function showBlocklistStatus() {
   const signing = Preferences.get("services.blocklist.signing.enforced");
   document.getElementById("signing").textContent = signing;
 
+  const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
 
   const server = Preferences.get("services.settings.server");
   const blocklistBucket = Preferences.get("services.blocklist.bucket");
@@ -75,7 +89,6 @@ function showBlocklistStatus() {
   const tpl = document.getElementById("collection-status-tpl");
   const statusList = document.getElementById("blocklists-status");
   statusList.innerHTML = "";
-
 
   const collections = ["addons", "onecrl", "plugins", "gfx", "pinning"];
   collections.forEach((collection) => {
@@ -95,6 +108,17 @@ function showBlocklistStatus() {
         infos.querySelector(".timestamp").textContent = new Date(timestamp);
         infos.querySelector(".nb-records").textContent = records.length;
         infos.querySelector(".last-check").textContent = lastChecked;
+
+        infos.querySelector(".clear-data").onclick = () => {
+          deleteLocal(bucket, collectionId)
+            .then(showBlocklistStatus);
+        }
+
+        infos.querySelector(".sync").onclick = () => {
+          gBlocklistClients[collectionId].maybeSync(Infinity, serverTimeMs)
+            .then(showBlocklistStatus);
+        }
+
         statusList.appendChild(infos);
       });
 
@@ -102,9 +126,8 @@ function showBlocklistStatus() {
 }
 
 
-function fetchLocal(bucket, collection) {
+function _localDb(bucket, collection, callback) {
   // XXX: simplify this using await/async
-
   const server = "http://unused/v1";
   const path = "kinto.sqlite";
   const config = {remote: server, adapter: FirefoxAdapter, bucket};
@@ -114,17 +137,32 @@ function fetchLocal(bucket, collection) {
       const options = Object.assign({}, config, {adapterOptions: {sqliteHandle}})
       const localCollection = new Kinto(options).collection(collection);
 
-      return localCollection.db.getLastModified()
-        .then((timestamp) => {
-          return localCollection.list()
-            .then(({data: records}) => {
-              return sqliteHandle.close()
-                .then(() => {
-                  return {timestamp, records};
-                });
-            })
+      return callback(localCollection)
+        .then((result) => {
+          return sqliteHandle.close()
+            .then(() => result);
         });
     });
+}
+
+
+function fetchLocal(bucket, collection) {
+  return _localDb(bucket, collection, (localCollection) => {
+    return localCollection.db.getLastModified()
+      .then((timestamp) => {
+        return localCollection.list()
+          .then(({data: records}) => {
+            return {timestamp, records};
+          });
+        });
+    });
+}
+
+
+function deleteLocal(bucket, collection) {
+  return _localDb(bucket, collection, (localCollection) => {
+    return localCollection.clear();
+  });
 }
 
 
