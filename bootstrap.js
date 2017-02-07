@@ -1,6 +1,3 @@
-const INDEX_HTML = "chrome://aboutremotesettings/content/index.html";
-
-
 function log(...args) {
   console.log(" *** aboutremotesettings: ", ...args);
 }
@@ -16,6 +13,8 @@ function uninstall(data, reason) {
 
 function startup(data, reason) {
   log("startup", data, reason);
+
+  // XXX: here we could have all this code to add a menu entry (like about:sync)
 }
 
 function shutdown(data, reason) {
