@@ -6,6 +6,13 @@ const {Preferences} = Cu.import("resource://gre/modules/Preferences.jsm", {});
 function main() {
   showPollingStatus();
   showBlocklistStatus();
+
+  // Poll for changes button.
+  const updater = Cu.import("resource://services-common/blocklist-updater.js", {});
+  const pollButton = document.getElementById("run-poll").onclick = () => {
+    updater.checkVersions()
+      .then(showPollingStatus);
+  }
 }
 
 
