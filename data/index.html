@@ -13,13 +13,12 @@
         <dd><span id="server">N/A</span><span id="changespath"></span></dd>
       </dl>
       <dl>
-        <dt>Last poll</dt>
+        <dt>Last check</dt>
         <dd id="last-poll">N/A</dd>
       </dl>
       <dl>
         <dt>Timestamp</dt>
         <dd id="timestamp">N/A</dd>
-        <dd id="humantimestamp">N/A</dd>
       </dl>
       <dl>
         <dt>Clock Skew</dt>
@@ -30,6 +29,7 @@
         <dd id="backoff">N/A</dd>
       </dl>
       <button id="run-poll">Poll server</button>
+      <button id="clear-data">Clear poll data</button>
     </section>
 
     <section>
@@ -61,9 +61,18 @@
           <dt>Last check</dt>
           <dd class="last-check"></dd>
         </dl>
+        <dl>
+          <dt>Timestamp</dt>
+          <dd class="timestamp"></dd>
+        </dl>
+        <dl>
+          <dt>Local records</dt>
+          <dd class="nb-records"></dd>
+        </dl>
+        <button class="clear-data">Clear local data</button>
       </template>
     </section>
 
-    <script type="text/javascript;version=1.7" src="script.js"></script>
+    <script type="text/javascript" src="script.js"></script>
   </body>
 </html>
