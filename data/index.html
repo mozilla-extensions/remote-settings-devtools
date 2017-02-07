@@ -31,6 +31,37 @@
       </dl>
     </section>
 
+    <section>
+      <h1>Blocklists status</h1>
+      <dl>
+        <dt>Update enabled</dt>
+        <dd id="blocklists-enabled">N/A</dd>
+      </dl>
+      <dl>
+        <dt>Pinning enabled</dt>
+        <dd id="pinning-enabled">N/A</dd>
+      </dl>
+      <dl>
+        <dt>OneCRL via AMO</dt>
+        <dd id="onecrl-amo">N/A</dd>
+      </dl>
+      <dl>
+        <dt>Signing enforced</dt>
+        <dd id="signing">N/A</dd>
+      </dl>
+      <div id="blocklists-status"></div>
+      <template id="collection-status-tpl">
+        <h2 class="blocklist"></h2>
+        <dl>
+          <dt>URL</dt>
+          <dd class="url"></dd>
+        </dl>
+        <dl>
+          <dt>Last check</dt>
+          <dd class="last-check"></dd>
+        </dl>
+      </template>
+    </section>
 
     <script type="text/javascript;version=1.7" src="script.js"></script>
   </body>
