@@ -56,7 +56,7 @@ const controller = {
     const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
     const signing = Preferences.get("services.blocklist.signing.enforced");
     const server = Preferences.get("services.settings.server");
-    const blocklistBucket = Preferences.get("services.blocklist.bucket");
+    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
 
     const changespath = Preferences.get("services.blocklist.changes.path");
@@ -75,7 +75,7 @@ const controller = {
       })
       .then((timestampsById) => {
         return Promise.all(collectionNames.map((name) => {
-          const bucket = name == "pinning" ? pinningBucket : blocklistBucket;
+          const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
           const id = Preferences.get(`services.blocklist.${name}.collection`);
           const url = `${server}/buckets/${bucket}/collections/${id}/records`;
           const lastCheckedSeconds = Preferences.get(`services.blocklist.${name}.checked`);
@@ -90,7 +90,9 @@ const controller = {
         }))
         .then((collections) => {
           return {
+            blocklistsBucket,
             blocklistsEnabled,
+            pinningBucket,
             pinningEnabled,
             oneCRLviaAmo,
             signing,
@@ -189,9 +191,11 @@ function showPollingStatus() {
         lastPoll,
         timestamp,
         clockskew } = result;
-      document.getElementById("server").textContent = server;
+
+      const url = `${server}${changespath}`;
+      document.getElementById("polling-url").textContent = url;
+      document.getElementById("polling-url").setAttribute("href", url);
       document.getElementById("backoff").textContent = backoff;
-      document.getElementById("changespath").textContent = changespath;
       document.getElementById("last-poll").textContent = lastPoll;
       document.getElementById("timestamp").textContent = timestamp;
       document.getElementById("human-timestamp").textContent = timestamp ? new Date(timestamp) : undefined;
@@ -205,7 +209,9 @@ function showBlocklistStatus() {
   controller.blocklistStatus()
     .then((result) => {
       const {
+        blocklistsBucket,
         blocklistsEnabled,
+        pinningBucket,
         pinningEnabled,
         oneCRLviaAmo,
         signing,
@@ -213,7 +219,11 @@ function showBlocklistStatus() {
         collections,
       } = result;
 
+      document.getElementById("server").textContent = server;
+      document.getElementById("server").setAttribute("href", server);
+      document.getElementById("blocklists-bucket").textContent = blocklistsBucket;
       document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
+      document.getElementById("pinning-bucket").textContent = pinningBucket;
       document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
       document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
       document.getElementById("signing").textContent = signing;
