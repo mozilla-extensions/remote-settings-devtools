@@ -3,14 +3,144 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const {Preferences} = Cu.import("resource://gre/modules/Preferences.jsm", {});
 const {Kinto} = Cu.import("resource://services-common/kinto-offline-client.js", {});
 const {FirefoxAdapter} = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
+const BlocklistUpdater = Cu.import("resource://services-common/blocklist-updater.js", {});
 
-const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
-const gBlocklistClients = {
-  [BlocklistClients.OneCRLBlocklistClient.collectionName]: BlocklistClients.OneCRLBlocklistClient,
-  [BlocklistClients.AddonBlocklistClient.collectionName]: BlocklistClients.AddonBlocklistClient,
-  [BlocklistClients.GfxBlocklistClient.collectionName]: BlocklistClients.GfxBlocklistClient,
-  [BlocklistClients.PluginBlocklistClient.collectionName]: BlocklistClients.PluginBlocklistClient,
-  [BlocklistClients.PinningPreloadClient.collectionName]: BlocklistClients.PinningPreloadClient
+const {
+  OneCRLBlocklistClient,
+  AddonBlocklistClient,
+  GfxBlocklistClient,
+  PluginBlocklistClient,
+  PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
+
+
+const controller = {
+  checkVersions() {
+    return BlocklistUpdater.checkVersions();
+  },
+
+  clearPollingData() {
+    Preferences.reset("services.blocklist.last_update_seconds");
+    Preferences.reset("services.blocklist.last_etag");
+  },
+
+  pollingStatus() {
+    const prefs = [
+      { target: "server",      name: "services.settings.server"} ,
+      { target: "backoff",     name: "services.settings.server.backoff" },
+      { target: "changespath", name: "services.blocklist.changes.path" },
+      { target: "lastPoll",    name: "services.blocklist.last_update_seconds" },
+      { target: "timestamp",   name: "services.blocklist.last_etag" },
+      { target: "clockskew",   name: "services.blocklist.clock_skew_seconds" }
+    ];
+    const result = {};
+    for(const pref of prefs) {
+      const {target, name} = pref;
+      const value = Preferences.get(name);
+      console.log(target, value);
+      switch (target) {
+        case "lastPoll":
+          result[target] = value ? new Date(parseInt(value, 10) * 1000) : undefined;
+          break;
+        case "timestamp":
+          result[target] = value ? new Date(parseInt(value.replace('"', ''), 10)) : undefined;
+          break;
+        default:
+          result[target] = value;
+      }
+    }
+    return Promise.resolve(result);
+  },
+
+  blocklistStatus() {
+    const blocklistsEnabled = Preferences.get("services.blocklist.update_enabled");
+    const pinningEnabled = Preferences.get("services.blocklist.pinning.enabled");
+    const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
+    const signing = Preferences.get("services.blocklist.signing.enforced");
+    const server = Preferences.get("services.settings.server");
+    const blocklistBucket = Preferences.get("services.blocklist.bucket");
+    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
+
+    const collectionNames = ["addons", "onecrl", "plugins", "gfx", "pinning"];
+
+    return Promise.all(collectionNames.map((name) => {
+      const bucket = name == "pinning" ? pinningBucket : blocklistBucket;
+      const id = Preferences.get(`services.blocklist.${name}.collection`);
+      const url = `${server}/buckets/${bucket}/collections/${id}/records`;
+      const lastCheckedSeconds = Preferences.get(`services.blocklist.${name}.checked`);
+      const lastChecked = lastCheckedSeconds ? new Date(parseInt(lastCheckedSeconds, 10) * 1000) : undefined;
+
+      return this.fetchLocal(bucket, name)
+        .then((local) => {
+          const {timestamp, records} = local;
+          return {id, name, bucket, url, lastChecked, timestamp, records};
+        });
+    }))
+    .then((collections) => {
+      return {
+        blocklistsEnabled,
+        pinningEnabled,
+        oneCRLviaAmo,
+        signing,
+        server,
+        collections
+      }
+    });
+  },
+
+  maybeSync(collection) {
+    const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
+    const lastModified = Infinity;  // never up-to-date.
+
+    const clientsById = {
+      [OneCRLBlocklistClient.collectionName]: OneCRLBlocklistClient,
+      [AddonBlocklistClient.collectionName]: AddonBlocklistClient,
+      [GfxBlocklistClient.collectionName]: GfxBlocklistClient,
+      [PluginBlocklistClient.collectionName]: PluginBlocklistClient,
+      [PinningPreloadClient.collectionName]: PinningPreloadClient
+    };
+    const id = Preferences.get(`services.blocklist.${collection}.collection`);
+    return clientsById[id].maybeSync(lastModified, serverTimeMs);
+  },
+
+  _localDb(bucket, collection, callback) {
+    // XXX: simplify this using await/async
+    const server = "http://unused/v1";
+    const path = "kinto.sqlite";
+    const config = {remote: server, adapter: FirefoxAdapter, bucket};
+
+    return FirefoxAdapter.openConnection({path})
+      .then((sqliteHandle) => {
+        const options = Object.assign({}, config, {adapterOptions: {sqliteHandle}})
+        const localCollection = new Kinto(options).collection(collection);
+
+        return callback(localCollection)
+          .then((result) => {
+            return sqliteHandle.close()
+              .then(() => result);
+          });
+      });
+  },
+
+  fetchLocal(bucket, collection) {
+    const id = Preferences.get(`services.blocklist.${collection}.collection`);
+    return this._localDb(bucket, id, (localCollection) => {
+      return localCollection.db.getLastModified()
+        .then((timestamp) => {
+          return localCollection.list()
+            .then(({data: records}) => {
+              return {timestamp, records};
+            });
+          });
+      });
+  },
+
+  deleteLocal(bucket, collection) {
+    Preferences.reset(`services.blocklist.${collection}.checked`);
+    const id = Preferences.get(`services.blocklist.${collection}.collection`);
+    return this._localDb(bucket, id, (localCollection) => {
+      return localCollection.clear();
+    });
+  },
 };
 
 
@@ -19,9 +149,8 @@ function main() {
   showBlocklistStatus();
 
   // Poll for changes button.
-  const updater = Cu.import("resource://services-common/blocklist-updater.js", {});
   document.getElementById("run-poll").onclick = () => {
-    updater.checkVersions()
+    controller.checkVersions()
       .then(() => {
         showPollingStatus();
         showBlocklistStatus();
@@ -30,139 +159,75 @@ function main() {
 
   // Reset local data.
   document.getElementById("clear-data").onclick = () => {
-    Preferences.reset("services.blocklist.last_update_seconds");
-    Preferences.reset("services.blocklist.last_etag");
+    controller.clearPollingData();
     showPollingStatus();
   }
 }
 
 
 function showPollingStatus() {
-
-  const prefs = [
-    { target: "server",         name: "services.settings.server"} ,
-    { target: "backoff",        name: "services.settings.server.backoff" },
-    { target: "changespath",    name: "services.blocklist.changes.path" },
-    { target: "last-poll",      name: "services.blocklist.last_update_seconds" },
-    { target: "timestamp",      name: "services.blocklist.last_etag" },
-    { target: "clockskew",      name: "services.blocklist.clock_skew_seconds" }
-  ];
-
-  for(const pref of prefs) {
-    const {target, name} = pref;
-    let value = Preferences.get(name);
-
-    switch (target) {
-      case "last-poll":
-        value = new Date(parseInt(value, 10) * 1000);
-        break;
-      case "timestamp":
-        value = new Date(parseInt(value.replace('"', ''), 10));
-        break;
-    }
-
-    document.getElementById(target).textContent = value;
-  }
+  controller.pollingStatus()
+    .then((result) => {
+      const {
+        server,
+        backoff,
+        changespath,
+        lastPoll,
+        timestamp,
+        clockskew } = result;
+      document.getElementById("server").textContent = server;
+      document.getElementById("backoff").textContent = backoff;
+      document.getElementById("changespath").textContent = changespath;
+      document.getElementById("last-poll").textContent = lastPoll;
+      document.getElementById("timestamp").textContent = timestamp;
+      document.getElementById("clockskew").textContent = clockskew;
+    });
 }
 
 
 
 function showBlocklistStatus() {
-  const blocklistsEnabled = Preferences.get("services.blocklist.update_enabled");
-  document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
+  controller.blocklistStatus()
+    .then((result) => {
+      const {
+        blocklistsEnabled,
+        pinningEnabled,
+        oneCRLviaAmo,
+        signing,
+        server,
+        collections,
+      } = result;
 
-  const pinningEnabled = Preferences.get("services.blocklist.pinning.enabled");
-  document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
+      document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
+      document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
+      document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
+      document.getElementById("signing").textContent = signing;
 
-  const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
-  document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
+      const tpl = document.getElementById("collection-status-tpl");
+      const statusList = document.getElementById("blocklists-status");
+      statusList.innerHTML = "";
 
-  const signing = Preferences.get("services.blocklist.signing.enforced");
-  document.getElementById("signing").textContent = signing;
-
-  const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
-
-  const server = Preferences.get("services.settings.server");
-  const blocklistBucket = Preferences.get("services.blocklist.bucket");
-  const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
-
-  const tpl = document.getElementById("collection-status-tpl");
-  const statusList = document.getElementById("blocklists-status");
-  statusList.innerHTML = "";
-
-  const collections = ["addons", "onecrl", "plugins", "gfx", "pinning"];
-  collections.forEach((collection) => {
-    const bucket = collection == "pinning" ? pinningBucket : blocklistBucket;
-    const collectionId = Preferences.get(`services.blocklist.${collection}.collection`);
-    const url = `${server}/buckets/${bucket}/collections/${collectionId}/records`;
-    const lastCheckedSeconds = Preferences.get(`services.blocklist.${collection}.checked`);
-    const lastChecked = new Date(parseInt(lastCheckedSeconds, 10) * 1000);
-
-    fetchLocal(bucket, collectionId)
-      .then((local) => {
-        const {timestamp, records} = local;
+      collections.forEach((collection) => {
+        const {bucket, name, url, lastChecked, records, timestamp} = collection;
 
         const infos = tpl.content.cloneNode(true);
-        infos.querySelector(".blocklist").textContent = collection;
+        infos.querySelector(".blocklist").textContent = name;
         infos.querySelector(".url").textContent = url;
-        infos.querySelector(".timestamp").textContent = new Date(timestamp);
+        infos.querySelector(".timestamp").textContent = timestamp ? new Date(timestamp) : undefined;
         infos.querySelector(".nb-records").textContent = records.length;
         infos.querySelector(".last-check").textContent = lastChecked;
 
         infos.querySelector(".clear-data").onclick = () => {
-          deleteLocal(bucket, collectionId)
+          controller.deleteLocal(bucket, name)
             .then(showBlocklistStatus);
         }
-
         infos.querySelector(".sync").onclick = () => {
-          gBlocklistClients[collectionId].maybeSync(Infinity, serverTimeMs)
+          controller.maybeSync(name)
             .then(showBlocklistStatus);
         }
-
         statusList.appendChild(infos);
       });
-
-  });
-}
-
-
-function _localDb(bucket, collection, callback) {
-  // XXX: simplify this using await/async
-  const server = "http://unused/v1";
-  const path = "kinto.sqlite";
-  const config = {remote: server, adapter: FirefoxAdapter, bucket};
-
-  return FirefoxAdapter.openConnection({path})
-    .then((sqliteHandle) => {
-      const options = Object.assign({}, config, {adapterOptions: {sqliteHandle}})
-      const localCollection = new Kinto(options).collection(collection);
-
-      return callback(localCollection)
-        .then((result) => {
-          return sqliteHandle.close()
-            .then(() => result);
-        });
     });
-}
-
-
-function fetchLocal(bucket, collection) {
-  return _localDb(bucket, collection, (localCollection) => {
-    return localCollection.db.getLastModified()
-      .then((timestamp) => {
-        return localCollection.list()
-          .then(({data: records}) => {
-            return {timestamp, records};
-          });
-        });
-    });
-}
-
-
-function deleteLocal(bucket, collection) {
-  return _localDb(bucket, collection, (localCollection) => {
-    return localCollection.clear();
-  });
 }
 
 
