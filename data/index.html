@@ -2,11 +2,20 @@
 <html>
   <head>
     <title>about:remotesettings</title>
+    <style>
+      section, .blocklist-status {
+        display: inline-block;
+        vertical-align: top;
+        padding: 10px;
+        margin: 10px;
+        background-color: white;
+      }
+    </style>
   </head>
   <body>
     <h1>about:remotesettings</h1>
 
-    <section>
+    <section id="polling-status">
       <h1>Polling status</h1>
       <dl>
         <dt>URL</dt>
@@ -22,7 +31,7 @@
       </dl>
       <dl>
         <dt>Clock Skew</dt>
-        <dd id="clockskew">N/A</dd>
+        <dd><span id="clockskew">N/A</span>s</dd>
       </dl>
       <dl>
         <dt>Backoff</dt>
@@ -32,8 +41,8 @@
       <button id="clear-data">Clear poll data</button>
     </section>
 
-    <section>
-      <h1>Blocklists status</h1>
+    <section id="blocklists-settings">
+      <h1>Blocklists settings</h1>
       <dl>
         <dt>Update enabled</dt>
         <dd id="blocklists-enabled">N/A</dd>
@@ -50,8 +59,12 @@
         <dt>Signing enforced</dt>
         <dd id="signing">N/A</dd>
       </dl>
-      <div id="blocklists-status"></div>
-      <template id="collection-status-tpl">
+    </section>
+
+    <section id="blocklists-status"></section>
+
+    <template id="collection-status-tpl">
+      <div class="blocklist-status">
         <h2 class="blocklist"></h2>
         <dl>
           <dt>URL</dt>
@@ -62,17 +75,21 @@
           <dd class="last-check"></dd>
         </dl>
         <dl>
-          <dt>Timestamp</dt>
+          <dt>Collection timestamp</dt>
           <dd class="timestamp"></dd>
+        </dl>
+        <dl>
+          <dt>Local timestamp</dt>
+          <dd class="local-timestamp"></dd>
         </dl>
         <dl>
           <dt>Local records</dt>
           <dd class="nb-records"></dd>
         </dl>
-        <button class="sync">Sync</button>
+        <button class="sync">Force sync</button>
         <button class="clear-data">Clear local data</button>
-      </template>
-    </section>
+      </div>
+    </template>
 
     <script type="text/javascript" src="script.js"></script>
   </body>

@@ -36,7 +36,6 @@ const controller = {
     for(const pref of prefs) {
       const {target, name} = pref;
       const value = Preferences.get(name);
-      console.log(target, value);
       switch (target) {
         case "lastPoll":
           result[target] = value ? new Date(parseInt(value, 10) * 1000) : undefined;
@@ -60,36 +59,51 @@ const controller = {
     const blocklistBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
 
+    const changespath = Preferences.get("services.blocklist.changes.path");
+    const monitorUrl = `${server}${changespath}`;
+
     const collectionNames = ["addons", "onecrl", "plugins", "gfx", "pinning"];
 
-    return Promise.all(collectionNames.map((name) => {
-      const bucket = name == "pinning" ? pinningBucket : blocklistBucket;
-      const id = Preferences.get(`services.blocklist.${name}.collection`);
-      const url = `${server}/buckets/${bucket}/collections/${id}/records`;
-      const lastCheckedSeconds = Preferences.get(`services.blocklist.${name}.checked`);
-      const lastChecked = lastCheckedSeconds ? new Date(parseInt(lastCheckedSeconds, 10) * 1000) : undefined;
+    return fetch(monitorUrl)
+      .then((response) => response.json())
+      .then(({data}) => {
+        return data.reduce((acc, entry) => {
+          const {collection, last_modified} = entry;
+          acc[collection] = acc[collection] || last_modified;
+          return acc;
+        }, {});
+      })
+      .then((timestampsById) => {
+        return Promise.all(collectionNames.map((name) => {
+          const bucket = name == "pinning" ? pinningBucket : blocklistBucket;
+          const id = Preferences.get(`services.blocklist.${name}.collection`);
+          const url = `${server}/buckets/${bucket}/collections/${id}/records`;
+          const lastCheckedSeconds = Preferences.get(`services.blocklist.${name}.checked`);
+          const lastChecked = lastCheckedSeconds ? new Date(parseInt(lastCheckedSeconds, 10) * 1000) : undefined;
+          const timestamp = timestampsById[id];
 
-      return this.fetchLocal(bucket, name)
-        .then((local) => {
-          const {timestamp, records} = local;
-          return {id, name, bucket, url, lastChecked, timestamp, records};
+          return this.fetchLocal(bucket, name)
+            .then((local) => {
+              const {localTimestamp, records} = local;
+              return {id, name, bucket, url, lastChecked, timestamp, localTimestamp, records};
+            });
+        }))
+        .then((collections) => {
+          return {
+            blocklistsEnabled,
+            pinningEnabled,
+            oneCRLviaAmo,
+            signing,
+            server,
+            collections
+          }
         });
-    }))
-    .then((collections) => {
-      return {
-        blocklistsEnabled,
-        pinningEnabled,
-        oneCRLviaAmo,
-        signing,
-        server,
-        collections
-      }
-    });
+      })
   },
 
-  maybeSync(collection) {
+  forceSync(collection) {
     const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
-    const lastModified = Infinity;  // never up-to-date.
+    const lastModified = Infinity;  // Force sync, never up-to-date.
 
     const clientsById = {
       [OneCRLBlocklistClient.collectionName]: OneCRLBlocklistClient,
@@ -128,7 +142,7 @@ const controller = {
         .then((timestamp) => {
           return localCollection.list()
             .then(({data: records}) => {
-              return {timestamp, records};
+              return {localTimestamp: timestamp, records};
             });
           });
       });
@@ -208,12 +222,13 @@ function showBlocklistStatus() {
       statusList.innerHTML = "";
 
       collections.forEach((collection) => {
-        const {bucket, name, url, lastChecked, records, timestamp} = collection;
+        const {bucket, name, url, lastChecked, records, localTimestamp, timestamp} = collection;
 
         const infos = tpl.content.cloneNode(true);
         infos.querySelector(".blocklist").textContent = name;
         infos.querySelector(".url").textContent = url;
         infos.querySelector(".timestamp").textContent = timestamp ? new Date(timestamp) : undefined;
+        infos.querySelector(".local-timestamp").textContent = localTimestamp ? new Date(localTimestamp) : undefined;
         infos.querySelector(".nb-records").textContent = records.length;
         infos.querySelector(".last-check").textContent = lastChecked;
 
@@ -222,7 +237,7 @@ function showBlocklistStatus() {
             .then(showBlocklistStatus);
         }
         infos.querySelector(".sync").onclick = () => {
-          controller.maybeSync(name)
+          controller.forceSync(name)
             .then(showBlocklistStatus);
         }
         statusList.appendChild(infos);
