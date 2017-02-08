@@ -4,7 +4,6 @@ const {Preferences} = Cu.import("resource://gre/modules/Preferences.jsm", {});
 const {Kinto} = Cu.import("resource://services-common/kinto-offline-client.js", {});
 const {FirefoxAdapter} = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
 const BlocklistUpdater = Cu.import("resource://services-common/blocklist-updater.js", {});
-
 const {
   OneCRLBlocklistClient,
   AddonBlocklistClient,
@@ -58,6 +57,7 @@ const controller = {
     const server = Preferences.get("services.settings.server");
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
+    const rootHash = Preferences.get("security.content.signature.root_hash");
 
     const changespath = Preferences.get("services.blocklist.changes.path");
     const monitorUrl = `${server}${changespath}`;
@@ -96,6 +96,7 @@ const controller = {
             pinningEnabled,
             oneCRLviaAmo,
             signing,
+            rootHash,
             server,
             collections
           }
@@ -204,7 +205,6 @@ function showPollingStatus() {
 }
 
 
-
 function showBlocklistStatus() {
   controller.blocklistStatus()
     .then((result) => {
@@ -215,6 +215,7 @@ function showBlocklistStatus() {
         pinningEnabled,
         oneCRLviaAmo,
         signing,
+        rootHash,
         server,
         collections,
       } = result;
@@ -227,6 +228,7 @@ function showBlocklistStatus() {
       document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
       document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
       document.getElementById("signing").textContent = signing;
+      document.getElementById("root-hash").textContent = rootHash;
 
       const tpl = document.getElementById("collection-status-tpl");
       const statusList = document.getElementById("blocklists-status");
