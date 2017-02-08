@@ -11,10 +11,34 @@ const {
   PluginBlocklistClient,
   PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
 
+const collectionNames = ["addons", "onecrl", "plugins", "gfx", "pinning"];
+
 
 const controller = {
   checkVersions() {
     return BlocklistUpdater.checkVersions();
+  },
+
+  mainSettings() {
+    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
+    const blocklistsEnabled = Preferences.get("services.blocklist.update_enabled");
+    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
+    const pinningEnabled = Preferences.get("services.blocklist.pinning.enabled");
+    const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
+    const signing = Preferences.get("services.blocklist.signing.enforced");
+    const rootHash = Preferences.get("security.content.signature.root_hash");
+    const server = Preferences.get("services.settings.server");
+
+    return Promise.resolve({
+      blocklistsBucket,
+      blocklistsEnabled,
+      pinningBucket,
+      pinningEnabled,
+      oneCRLviaAmo,
+      signing,
+      rootHash,
+      server,
+    });
   },
 
   clearPollingData() {
@@ -50,19 +74,12 @@ const controller = {
   },
 
   blocklistStatus() {
-    const blocklistsEnabled = Preferences.get("services.blocklist.update_enabled");
-    const pinningEnabled = Preferences.get("services.blocklist.pinning.enabled");
-    const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
-    const signing = Preferences.get("services.blocklist.signing.enforced");
     const server = Preferences.get("services.settings.server");
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
-    const rootHash = Preferences.get("security.content.signature.root_hash");
 
     const changespath = Preferences.get("services.blocklist.changes.path");
     const monitorUrl = `${server}${changespath}`;
-
-    const collectionNames = ["addons", "onecrl", "plugins", "gfx", "pinning"];
 
     return fetch(monitorUrl)
       .then((response) => response.json())
@@ -87,20 +104,7 @@ const controller = {
               const {localTimestamp, records} = local;
               return {id, name, bucket, url, lastChecked, timestamp, localTimestamp, records};
             });
-        }))
-        .then((collections) => {
-          return {
-            blocklistsBucket,
-            blocklistsEnabled,
-            pinningBucket,
-            pinningEnabled,
-            oneCRLviaAmo,
-            signing,
-            rootHash,
-            server,
-            collections
-          }
-        });
+        }));
       })
   },
 
@@ -162,6 +166,7 @@ const controller = {
 
 
 function main() {
+  showSettings();
   showPollingStatus();
   showBlocklistStatus();
 
@@ -179,6 +184,33 @@ function main() {
     controller.clearPollingData();
     showPollingStatus();
   }
+}
+
+
+function showSettings() {
+  controller.mainSettings()
+    .then((result) => {
+      const {
+        blocklistsBucket,
+        blocklistsEnabled,
+        pinningBucket,
+        pinningEnabled,
+        oneCRLviaAmo,
+        signing,
+        rootHash,
+        server,
+      } = result;
+
+      document.getElementById("server").textContent = server;
+      document.getElementById("server").setAttribute("href", server);
+      document.getElementById("blocklists-bucket").textContent = blocklistsBucket;
+      document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
+      document.getElementById("pinning-bucket").textContent = pinningBucket;
+      document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
+      document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
+      document.getElementById("signing").textContent = signing;
+      document.getElementById("root-hash").textContent = rootHash;
+    });
 }
 
 
@@ -206,32 +238,11 @@ function showPollingStatus() {
 
 
 function showBlocklistStatus() {
+  const tpl = document.getElementById("collection-status-tpl");
+  const statusList = document.getElementById("blocklists-status");
+
   controller.blocklistStatus()
-    .then((result) => {
-      const {
-        blocklistsBucket,
-        blocklistsEnabled,
-        pinningBucket,
-        pinningEnabled,
-        oneCRLviaAmo,
-        signing,
-        rootHash,
-        server,
-        collections,
-      } = result;
-
-      document.getElementById("server").textContent = server;
-      document.getElementById("server").setAttribute("href", server);
-      document.getElementById("blocklists-bucket").textContent = blocklistsBucket;
-      document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
-      document.getElementById("pinning-bucket").textContent = pinningBucket;
-      document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
-      document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
-      document.getElementById("signing").textContent = signing;
-      document.getElementById("root-hash").textContent = rootHash;
-
-      const tpl = document.getElementById("collection-status-tpl");
-      const statusList = document.getElementById("blocklists-status");
+    .then(({collections}) => {
       statusList.innerHTML = "";
 
       collections.forEach((collection) => {
