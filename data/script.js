@@ -41,7 +41,7 @@ const controller = {
           result[target] = value ? new Date(parseInt(value, 10) * 1000) : undefined;
           break;
         case "timestamp":
-          result[target] = value ? new Date(parseInt(value.replace('"', ''), 10)) : undefined;
+          result[target] = value ? parseInt(value.replace('"', ''), 10) : undefined;
           break;
         default:
           result[target] = value;
@@ -194,6 +194,7 @@ function showPollingStatus() {
       document.getElementById("changespath").textContent = changespath;
       document.getElementById("last-poll").textContent = lastPoll;
       document.getElementById("timestamp").textContent = timestamp;
+      document.getElementById("human-timestamp").textContent = timestamp ? new Date(timestamp) : undefined;
       document.getElementById("clockskew").textContent = clockskew;
     });
 }
@@ -222,13 +223,16 @@ function showBlocklistStatus() {
       statusList.innerHTML = "";
 
       collections.forEach((collection) => {
-        const {bucket, name, url, lastChecked, records, localTimestamp, timestamp} = collection;
+        const {bucket, id, name, url, lastChecked, records, localTimestamp, timestamp} = collection;
 
         const infos = tpl.content.cloneNode(true);
         infos.querySelector(".blocklist").textContent = name;
-        infos.querySelector(".url").textContent = url;
-        infos.querySelector(".timestamp").textContent = timestamp ? new Date(timestamp) : undefined;
-        infos.querySelector(".local-timestamp").textContent = localTimestamp ? new Date(localTimestamp) : undefined;
+        infos.querySelector(".url a").textContent = `${bucket}/${id}`;
+        infos.querySelector(".url a").setAttribute("href", url);
+        infos.querySelector(".human-timestamp").textContent = timestamp ? new Date(timestamp) : "⚠ undefined";
+        infos.querySelector(".timestamp").textContent = timestamp;
+        infos.querySelector(".human-local-timestamp").textContent = localTimestamp ? new Date(localTimestamp) : undefined;
+        infos.querySelector(".local-timestamp").textContent = localTimestamp;
         infos.querySelector(".nb-records").textContent = records.length;
         infos.querySelector(".last-check").textContent = lastChecked;
 

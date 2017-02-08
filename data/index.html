@@ -10,6 +10,14 @@
         margin: 10px;
         background-color: white;
       }
+
+      .local-timestamp, .timestamp, #timestamp {
+        color: #888;
+      }
+
+      dt {
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -27,6 +35,7 @@
       </dl>
       <dl>
         <dt>Timestamp</dt>
+        <dd id="human-timestamp">N/A</dd>
         <dd id="timestamp">N/A</dd>
       </dl>
       <dl>
@@ -66,9 +75,9 @@
     <template id="collection-status-tpl">
       <div class="blocklist-status">
         <h2 class="blocklist"></h2>
-        <dl>
+        <dl class="url">
           <dt>URL</dt>
-          <dd class="url"></dd>
+          <dd><a href="" target="_blank"></a></dd>
         </dl>
         <dl>
           <dt>Last check</dt>
@@ -76,10 +85,12 @@
         </dl>
         <dl>
           <dt>Collection timestamp</dt>
+          <dd class="human-timestamp"></dd>
           <dd class="timestamp"></dd>
         </dl>
         <dl>
           <dt>Local timestamp</dt>
+          <dd class="human-local-timestamp"></dd>
           <dd class="local-timestamp"></dd>
         </dl>
         <dl>
