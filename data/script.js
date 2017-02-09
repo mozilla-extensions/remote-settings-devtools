@@ -11,6 +11,15 @@ const {
   PluginBlocklistClient,
   PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
 
+
+const CLIENTS = {
+  [OneCRLBlocklistClient.collectionName]: OneCRLBlocklistClient,
+  [AddonBlocklistClient.collectionName]: AddonBlocklistClient,
+  [GfxBlocklistClient.collectionName]: GfxBlocklistClient,
+  [PluginBlocklistClient.collectionName]: PluginBlocklistClient,
+  [PinningPreloadClient.collectionName]: PinningPreloadClient
+};
+
 const SERVER_PROD  = "https://firefox.settings.services.mozilla.com/v1";
 const SERVER_STAGE = "https://settings.stage.mozaws.net/v1";
 const HASH_PROD    = "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E";
@@ -43,24 +52,32 @@ const controller = {
         Preferences.set("services.blocklist.bucket",            "blocklists");
         Preferences.set("services.blocklist.pinning.bucket",    "pinning");
         Preferences.set("security.content.signature.root_hash", HASH_PROD);
+        for(const client of Object.values(CLIENTS)) { client.bucketName = "blocklists"; }
+        PinningPreloadClient.bucketName = "pinning";
         break;
       case "prod-preview":
         Preferences.set("services.settings.server",             SERVER_PROD);
         Preferences.set("services.blocklist.bucket",            "blocklists-preview");
         Preferences.set("services.blocklist.pinning.bucket",    "pinning-preview");
         Preferences.set("security.content.signature.root_hash", HASH_PROD);
+        for(const client of Object.values(CLIENTS)) { client.bucketName = "blocklists-preview"; }
+        PinningPreloadClient.bucketName = "pinning-preview";
         break;
       case "stage":
         Preferences.set("services.settings.server",             SERVER_STAGE);
         Preferences.set("services.blocklist.bucket",            "blocklists");
         Preferences.set("services.blocklist.pinning.bucket",    "pinning");
         Preferences.set("security.content.signature.root_hash", HASH_STAGE);
+        for(const client of Object.values(CLIENTS)) { client.bucketName = "blocklists"; }
+        PinningPreloadClient.bucketName = "pinning";
         break;
       case "stage-preview":
         Preferences.set("services.settings.server",             SERVER_STAGE);
         Preferences.set("services.blocklist.bucket",            "blocklists-preview");
         Preferences.set("services.blocklist.pinning.bucket",    "pinning-preview");
         Preferences.set("security.content.signature.root_hash", HASH_STAGE);
+        for(const client of Object.values(CLIENTS)) { client.bucketName = "blocklists-preview"; }
+        PinningPreloadClient.bucketName = "pinning-preview";
         break;
     }
   },
@@ -135,8 +152,11 @@ const controller = {
       .then((response) => response.json())
       .then(({data}) => {
         return data.reduce((acc, entry) => {
-          const {collection, last_modified} = entry;
-          acc[collection] = acc[collection] || last_modified;
+          const {collection, bucket, last_modified} = entry;
+          const currentBucket = collection == "pinning" ? pinningBucket : blocklistsBucket;
+          if (bucket == currentBucket) {
+            acc[collection] = acc[collection] || last_modified;
+          }
           return acc;
         }, {});
       })
@@ -162,15 +182,8 @@ const controller = {
     const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
     const lastModified = Infinity;  // Force sync, never up-to-date.
 
-    const clientsById = {
-      [OneCRLBlocklistClient.collectionName]: OneCRLBlocklistClient,
-      [AddonBlocklistClient.collectionName]: AddonBlocklistClient,
-      [GfxBlocklistClient.collectionName]: GfxBlocklistClient,
-      [PluginBlocklistClient.collectionName]: PluginBlocklistClient,
-      [PinningPreloadClient.collectionName]: PinningPreloadClient
-    };
     const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return clientsById[id].maybeSync(lastModified, serverTimeMs);
+    return CLIENTS[id].maybeSync(lastModified, serverTimeMs);
   },
 
   _localDb(bucket, collection, callback) {
