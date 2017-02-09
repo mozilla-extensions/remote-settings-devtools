@@ -312,8 +312,7 @@ function showPollingStatus() {
 function showBlocklistStatus() {
   const tpl = document.getElementById("collection-status-tpl");
   const statusList = document.getElementById("blocklists-status");
-
-  controller.blocklistStatus()
+  return controller.blocklistStatus()
     .then((collections) => {
       statusList.innerHTML = "";
 
@@ -321,6 +320,7 @@ function showBlocklistStatus() {
         const {bucket, id, name, url, lastChecked, records, localTimestamp, timestamp} = collection;
 
         const infos = tpl.content.cloneNode(true);
+        infos.querySelector("div").setAttribute("id", `status-${id}`);
         infos.querySelector(".blocklist").textContent = name;
         infos.querySelector(".url a").textContent = `${bucket}/${id}`;
         infos.querySelector(".url a").setAttribute("href", url);
@@ -336,8 +336,14 @@ function showBlocklistStatus() {
             .then(showBlocklistStatus);
         }
         infos.querySelector(".sync").onclick = () => {
+          let error = '';
           controller.forceSync(name)
-            .then(showBlocklistStatus);
+            .catch((e) => error = e)
+            .then(showBlocklistStatus)
+            .then(() => {
+              if (error) console.log(error);
+              document.querySelector(`#status-${id} .error`).textContent = error;
+            });
         }
         statusList.appendChild(infos);
       });
