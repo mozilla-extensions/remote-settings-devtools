@@ -11,10 +11,60 @@ const {
   PluginBlocklistClient,
   PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
 
-const collectionNames = ["addons", "onecrl", "plugins", "gfx", "pinning"];
+const SERVER_PROD  = "https://firefox.settings.services.mozilla.com/v1";
+const SERVER_STAGE = "https://settings.stage.mozaws.net/v1";
+const HASH_PROD    = "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E";
+const HASH_STAGE   = "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90";
+
+const COLLECTIONS = ["addons", "onecrl", "plugins", "gfx", "pinning"];
 
 
 const controller = {
+  guessEnvironment() {
+    const server = Preferences.get("services.settings.server");
+    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
+    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
+    let environment = "custom";
+    if (server == SERVER_PROD) {
+      environment = "prod";
+    } else if (server == SERVER_STAGE) {
+      environment = "stage";
+    }
+    if (/-preview$/.test(blocklistsBucket) && /-preview$/.test(pinningBucket)) {
+      environment += "-preview";
+    }
+    return environment;
+  },
+
+  setEnvironment(env) {
+    switch(env) {
+      case "prod":
+        Preferences.set("services.settings.server",             SERVER_PROD);
+        Preferences.set("services.blocklist.bucket",            "blocklists");
+        Preferences.set("services.blocklist.pinning.bucket",    "pinning");
+        Preferences.set("security.content.signature.root_hash", HASH_PROD);
+        break;
+      case "prod-preview":
+        Preferences.set("services.settings.server",             SERVER_PROD);
+        Preferences.set("services.blocklist.bucket",            "blocklists-preview");
+        Preferences.set("services.blocklist.pinning.bucket",    "pinning-preview");
+        Preferences.set("security.content.signature.root_hash", HASH_PROD);
+        break;
+      case "stage":
+        Preferences.set("services.settings.server",             SERVER_STAGE);
+        Preferences.set("services.blocklist.bucket",            "blocklists");
+        Preferences.set("services.blocklist.pinning.bucket",    "pinning");
+        Preferences.set("security.content.signature.root_hash", HASH_STAGE);
+        break;
+      case "stage-preview":
+        Preferences.set("services.settings.server",             SERVER_STAGE);
+        Preferences.set("services.blocklist.bucket",            "blocklists-preview");
+        Preferences.set("services.blocklist.pinning.bucket",    "pinning-preview");
+        Preferences.set("security.content.signature.root_hash", HASH_STAGE);
+        break;
+    }
+  },
+
   checkVersions() {
     return BlocklistUpdater.checkVersions();
   },
@@ -91,7 +141,7 @@ const controller = {
         }, {});
       })
       .then((timestampsById) => {
-        return Promise.all(collectionNames.map((name) => {
+        return Promise.all(COLLECTIONS.map((name) => {
           const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
           const id = Preferences.get(`services.blocklist.${name}.collection`);
           const url = `${server}/buckets/${bucket}/collections/${id}/records`;
@@ -169,6 +219,15 @@ function main() {
   showSettings();
   showPollingStatus();
   showBlocklistStatus();
+
+  // Change environment.
+  const environment = controller.guessEnvironment();
+  const comboEnv = document.getElementById("environment");
+  comboEnv.value = environment;
+  comboEnv.onchange = (event) => {
+    controller.setEnvironment(event.target.value);
+    showSettings();
+  };
 
   // Poll for changes button.
   document.getElementById("run-poll").onclick = () => {
