@@ -301,7 +301,7 @@ function showBlocklistStatus() {
   const statusList = document.getElementById("blocklists-status");
 
   controller.blocklistStatus()
-    .then(({collections}) => {
+    .then((collections) => {
       statusList.innerHTML = "";
 
       collections.forEach((collection) => {
