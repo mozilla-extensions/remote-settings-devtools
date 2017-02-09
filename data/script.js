@@ -111,13 +111,17 @@ const controller = {
   clearPollingData() {
     Preferences.reset("services.blocklist.last_update_seconds");
     Preferences.reset("services.blocklist.last_etag");
+    Preferences.reset("services.blocklist.clock_skew_seconds");
+    Preferences.reset("services.settings.server.backoff");
   },
 
   pollingStatus() {
     const prefs = [
+      // Settings
       { target: "server",      name: "services.settings.server"} ,
-      { target: "backoff",     name: "services.settings.server.backoff" },
       { target: "changespath", name: "services.blocklist.changes.path" },
+      // Status
+      { target: "backoff",     name: "services.settings.server.backoff" },
       { target: "lastPoll",    name: "services.blocklist.last_update_seconds" },
       { target: "timestamp",   name: "services.blocklist.last_etag" },
       { target: "clockskew",   name: "services.blocklist.clock_skew_seconds" }
@@ -225,6 +229,16 @@ const controller = {
       return localCollection.clear();
     });
   },
+
+  deleteAllLocal() {
+    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
+    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
+    // Execute delete sequentially.
+    return COLLECTIONS.reduce((acc, name) => {
+      const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
+      return acc.then(() => controller.deleteLocal(bucket, name));
+    }, Promise.resolve([]));
+  },
 };
 
 
@@ -251,10 +265,18 @@ function main() {
       });
   }
 
-  // Reset local data.
-  document.getElementById("clear-data").onclick = () => {
+  // Reset local polling data.
+  document.getElementById("clear-poll-data").onclick = () => {
     controller.clearPollingData();
     showPollingStatus();
+  }
+
+  // Clear all data.
+  document.getElementById("clear-all-data").onclick = () => {
+    controller.clearPollingData();
+    showPollingStatus();
+    controller.deleteAllLocal()
+      .then(showBlocklistStatus);
   }
 }
 

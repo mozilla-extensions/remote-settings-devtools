@@ -27,35 +27,8 @@
   <body>
     <h1>about:remotesettings</h1>
 
-    <section id="polling-status">
-      <h1>Polling status</h1>
-      <dl>
-        <dt>URL</dt>
-        <dd><a id="polling-url"></a></dd>
-      </dl>
-      <dl>
-        <dt>Last check</dt>
-        <dd id="last-poll">N/A</dd>
-      </dl>
-      <dl>
-        <dt>Timestamp</dt>
-        <dd id="human-timestamp">N/A</dd>
-        <dd id="timestamp">N/A</dd>
-      </dl>
-      <dl>
-        <dt>Clock Skew</dt>
-        <dd><span id="clockskew">N/A</span>s</dd>
-      </dl>
-      <dl>
-        <dt>Backoff</dt>
-        <dd id="backoff">N/A</dd>
-      </dl>
-      <button id="run-poll">Poll server</button>
-      <button id="clear-data">Clear poll data</button>
-    </section>
-
     <section id="blocklists-settings">
-      <h1>Blocklists settings</h1>
+      <h1>Configuration</h1>
       <label>
         Environment
         <select id="environment">
@@ -100,6 +73,34 @@
       </dl>
     </section>
 
+    <section id="polling-status">
+      <h1>Polling status</h1>
+      <dl>
+        <dt>URL</dt>
+        <dd><a id="polling-url"></a></dd>
+      </dl>
+      <dl>
+        <dt>Timestamp</dt>
+        <dd id="human-timestamp">N/A</dd>
+        <dd id="timestamp">N/A</dd>
+      </dl>
+      <dl>
+        <dt>Last check</dt>
+        <dd id="last-poll">N/A</dd>
+      </dl>
+      <dl>
+        <dt>Clock Skew</dt>
+        <dd><span id="clockskew">N/A</span>s</dd>
+      </dl>
+      <dl>
+        <dt>Backoff</dt>
+        <dd id="backoff">N/A</dd>
+      </dl>
+      <button id="run-poll">Poll server</button>
+      <button id="clear-poll-data">Clear poll data</button>
+      <button id="clear-all-data">Clear ALL local data</button>
+    </section>
+
     <section id="blocklists-status"></section>
 
     <template id="collection-status-tpl">
@@ -110,13 +111,13 @@
           <dd><a></a></dd>
         </dl>
         <dl>
-          <dt>Last check</dt>
-          <dd class="last-check"></dd>
-        </dl>
-        <dl>
           <dt>Collection timestamp</dt>
           <dd class="human-timestamp"></dd>
           <dd class="timestamp"></dd>
+        </dl>
+        <dl>
+          <dt>Last check</dt>
+          <dd class="last-check"></dd>
         </dl>
         <dl>
           <dt>Local timestamp</dt>
