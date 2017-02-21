@@ -8,7 +8,7 @@
     <em:type>2</em:type>
     <em:id>aboutremotesettings@leplatrem.github.com</em:id>
     <em:name>About remote settings extension for Firefox</em:name>
-    <em:version>0.1.0</em:version>
+    <em:version>0.2.0</em:version>
     <em:description>Show information about remote settings updates.</em:description>
     <em:creator>Storage Team</em:creator>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
