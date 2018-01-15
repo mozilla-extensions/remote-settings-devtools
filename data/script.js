@@ -11,7 +11,8 @@ const {
   AddonBlocklistClient,
   GfxBlocklistClient,
   PluginBlocklistClient,
-  PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
+  PinningPreloadClient
+} = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 
 const CLIENTS = {
@@ -191,7 +192,7 @@ const controller = {
       const value = Preferences.get(name);
       switch (target) {
         case "lastPoll":
-          result[target] = value ? new Date(parseInt(value, 10) * 1000) : undefined;
+          result[target] = value ? parseInt(value, 10) * 1000 : undefined;
           break;
         case "timestamp":
           result[target] = value ? parseInt(value.replace('"', ''), 10) : undefined;
@@ -231,7 +232,7 @@ const controller = {
       const id = Preferences.get(`services.blocklist.${name}.collection`);
       const url = `${server}/buckets/${bucket}/collections/${id}/records`;
       const lastCheckedSeconds = Preferences.get(`services.blocklist.${name}.checked`);
-      const lastChecked = lastCheckedSeconds ? new Date(parseInt(lastCheckedSeconds, 10) * 1000) : undefined;
+      const lastChecked = lastCheckedSeconds ? parseInt(lastCheckedSeconds, 10) * 1000 : undefined;
       const timestamp = timestampsById[id];
 
       const local = await this.fetchLocal(bucket, name);
@@ -488,9 +489,10 @@ async function showPollingStatus() {
   document.getElementById("polling-url").textContent = url;
   document.getElementById("polling-url").setAttribute("href", url);
   document.getElementById("backoff").textContent = backoff;
-  document.getElementById("last-poll").textContent = lastPoll;
+  document.getElementById("last-poll").textContent = asDate(lastPoll);
   document.getElementById("timestamp").textContent = timestamp;
-  document.getElementById("human-timestamp").textContent = timestamp ? new Date(timestamp) : undefined;
+  document.getElementById("clockskew").textContent = clockskew;
+  document.getElementById("human-timestamp").textContent = asDate(timestamp);
 }
 
 
@@ -518,12 +520,12 @@ async function showBlocklistStatus() {
     infos.querySelector(".blocklist").textContent = name;
     infos.querySelector(".url a").textContent = `${bucket}/${id}`;
     infos.querySelector(".url a").setAttribute("href", url);
-    infos.querySelector(".human-timestamp").textContent = timestamp ? new Date(timestamp) : "⚠ undefined";
+    infos.querySelector(".human-timestamp").textContent = asDate(timestamp);
     infos.querySelector(".timestamp").textContent = timestamp;
-    infos.querySelector(".human-local-timestamp").textContent = localTimestamp ? new Date(localTimestamp) : undefined;
+    infos.querySelector(".human-local-timestamp").textContent = asDate(localTimestamp);
     infos.querySelector(".local-timestamp").textContent = localTimestamp;
     infos.querySelector(".nb-records").textContent = records.length;
-    infos.querySelector(".last-check").textContent = lastChecked;
+    infos.querySelector(".last-check").textContent = asDate(lastChecked);
 
     infos.querySelector(".clear-data").onclick = async () => {
       await controller.deleteLocal(bucket, name)
