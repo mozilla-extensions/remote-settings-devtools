@@ -23,6 +23,10 @@
       .error {
         color: red;
       }
+
+      .status {
+        text-transform: uppercase;
+      }
     </style>
   </head>
   <body>
@@ -133,6 +137,10 @@
     </section>
 
     <section id="blocklists-status"></section>
+    <section id="telemetry-events">
+      <h2>Telemetry Events</h2>
+      <ul></ul>
+    </section>
 
     <template id="collection-status-tpl">
       <div class="blocklist-status">
@@ -163,6 +171,10 @@
         <button class="clear-data">Clear local data</button>
         <div class="error"></div>
       </div>
+    </template>
+
+    <template id="telemetry-event-tpl">
+      <li><span class="source"></span> <span class="status"></span></li>
     </template>
 
     <script type="text/javascript" src="chrome://aboutremotesettings/content/script.js"></script>

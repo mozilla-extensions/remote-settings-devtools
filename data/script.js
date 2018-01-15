@@ -4,6 +4,7 @@ const {Preferences} = Cu.import("resource://gre/modules/Preferences.jsm", {});
 const {Kinto} = Cu.import("resource://services-common/kinto-offline-client.js", {});
 const {FirefoxAdapter} = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
 const BlocklistUpdater = Cu.import("resource://services-common/blocklist-updater.js", {});
+const {UptakeTelemetry} = Cu.import("resource://services-common/uptake-telemetry.js", {});
 const {UpdateUtils} = Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
 const {
@@ -370,6 +371,13 @@ async function main() {
     showXmlStatus()
   ]);
 
+  // Install a wrapper around uptake Telemetry to catch events.
+  const original = UptakeTelemetry.report;
+  UptakeTelemetry.report = (source, status) => {
+    showTelemetryEvent(source, status);
+    original(source, status);
+  }
+
   // Change environment.
   const environment = controller.guessEnvironment();
   const comboEnv = document.getElementById("environment");
@@ -418,6 +426,7 @@ async function main() {
   }
 }
 
+window.addEventListener("DOMContentLoaded", main);
 
 function asDate(timestamp) {
   return timestamp ? new Date(timestamp) : "⚠ undefined";
@@ -549,4 +558,18 @@ async function showBlocklistStatus() {
 }
 
 
-window.addEventListener("DOMContentLoaded", main);
+function showTelemetryEvent(source, status) {
+  const success = [UptakeTelemetry.STATUS.UP_TO_DATE, UptakeTelemetry.STATUS.SUCCESS];
+  const warn = [UptakeTelemetry.STATUS.BACKOFF, UptakeTelemetry.STATUS.PREF_DISABLED];
+  const klass = success.indexOf(status) > -1 ? "success"
+                                             : warn.indexOf(status) > -1 ? "warn" : "error";
+
+  const tpl = document.getElementById("telemetry-event-tpl");
+  const el = tpl.content.cloneNode(true);
+  el.querySelector("li").setAttribute("class", klass);
+  el.querySelector(".source").textContent = source;
+  el.querySelector(".status").textContent = status;
+
+  const eventList = document.querySelector("#telemetry-events ul");
+  eventList.appendChild(el);
+}
