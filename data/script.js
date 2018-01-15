@@ -32,6 +32,11 @@ const COLLECTIONS = ["addons", "onecrl", "plugins", "gfx", "pinning"];
 
 
 const controller = {
+
+  /**
+   * guessEnvironment() will read the current preferences and return the
+   * environment name (suffixed with `preview` if relevant).
+   */
   guessEnvironment() {
     const server = Preferences.get("services.settings.server");
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
@@ -48,6 +53,10 @@ const controller = {
     return environment;
   },
 
+  /**
+   * setEnvironment() will set the necessary internal preferences to switch from
+   * an environment to another.
+   */
   setEnvironment(env) {
     switch(env) {
       case "prod":
@@ -89,11 +98,10 @@ const controller = {
     }
   },
 
-  async checkVersions() {
-    return BlocklistUpdater.checkVersions();
-  },
-
-  mainSettings() {
+  /**
+   * mainPreferences() returns the values of the internal preferences related to remote settings.
+   */
+  mainPreferences() {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const blocklistsEnabled = Preferences.get("services.blocklist.update_enabled");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
@@ -115,16 +123,54 @@ const controller = {
     });
   },
 
-  clearPollingData() {
+  /**
+   * synchronizeRemoteSettings() is the one of the main synchronization actions. It triggers
+   * a Kinto remote settings synchronization, as it would from the XPCOM registry.
+   * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#596
+   */
+  async synchronizeRemoteSettings() {
+    return BlocklistUpdater.checkVersions();
+  },
+
+  /**
+   * refreshXml() is the global synchronization action. It triggers everything, from
+   * XML refresh to Kinto remote settings synchronization.
+   * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#483
+   */
+  async refreshXml() {
+    const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
+    blocklist.notify(null);
+  },
+
+  /**
+   * forceSync() will trigger a synchronization at the Kinto level only for the specified collection.
+   */
+  async forceSync(collection) {
+    const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
+    const lastModified = Infinity;  // Force sync, never up-to-date.
+
+    const id = Preferences.get(`services.blocklist.${collection}.collection`);
+    return CLIENTS[id].maybeSync(lastModified, serverTimeMs);
+  },
+
+  /**
+   * clearPollingStatus() resets the local preferences about the global polling status.
+   * It will simulate a profile that has never been synchronized.
+   */
+  clearPollingStatus() {
     Preferences.reset("services.blocklist.last_update_seconds");
     Preferences.reset("services.blocklist.last_etag");
     Preferences.reset("services.blocklist.clock_skew_seconds");
     Preferences.reset("services.settings.server.backoff");
   },
 
+  /**
+   * pollingStatus() returns the current preferences values about the
+   * global polling status.
+   */
   async pollingStatus() {
     const prefs = [
-      // Settings
+      // Preferences
       { target: "server",      name: "services.settings.server"} ,
       { target: "changespath", name: "services.blocklist.changes.path" },
       // Status
@@ -151,6 +197,9 @@ const controller = {
     return result;
   },
 
+  /**
+   * blocklistStatus() returns information about each blocklist collection.
+   */
   async blocklistStatus() {
     const server = Preferences.get("services.settings.server");
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
@@ -159,7 +208,7 @@ const controller = {
     const changespath = Preferences.get("services.blocklist.changes.path");
     const monitorUrl = `${server}${changespath}`;
 
-    const response await fetch(monitorUrl);
+    const response = await fetch(monitorUrl);
     const {data} = response.json();
 
     const timestampsById = data.reduce((acc, entry) => {
@@ -171,7 +220,7 @@ const controller = {
       return acc;
     }, {});
 
-    return Promise.all(COLLECTIONS.map((name) => {
+    return Promise.all(COLLECTIONS.map(async (name) => {
       const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
       const id = Preferences.get(`services.blocklist.${name}.collection`);
       const url = `${server}/buckets/${bucket}/collections/${id}/records`;
@@ -181,10 +230,22 @@ const controller = {
 
       const local = await this.fetchLocal(bucket, name);
       const {localTimestamp, records} = local;
-      return {id, name, bucket, url, lastChecked, timestamp, localTimestamp, records};
+      return {
+        id,
+        name,
+        bucket,
+        url,
+        lastChecked,
+        timestamp,
+        localTimestamp,
+        records
+      };
     }));
   },
 
+  /**
+   * xmlStatus() returns information about the legacy XML blocklist file.
+   */
   async xmlStatus() {
     const urlTemplate = Preferences.get("extensions.blocklist.url");
     const interval    = Preferences.get("extensions.blocklist.interval");
@@ -231,20 +292,14 @@ const controller = {
                            .replace("%OS_VERSION%", encodeURIComponent(osVersion))
                            .replace("%DISTRIBUTION%", distribution)
                            .replace("%DISTRIBUTION_VERSION%", distributionVersion);
-    return {url, interval, pingCount, pingTotal, lastUpdate, ageDays};
-  },
-
-  async refreshXml() {
-    const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
-    blocklist.notify(null);
-  },
-
-  async forceSync(collection) {
-    const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
-    const lastModified = Infinity;  // Force sync, never up-to-date.
-
-    const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return CLIENTS[id].maybeSync(lastModified, serverTimeMs);
+    return {
+      url,
+      interval,
+      pingCount,
+      pingTotal,
+      lastUpdate,
+      ageDays
+    };
   },
 
   async _localDb(bucket, collection, callback) {
@@ -261,6 +316,9 @@ const controller = {
     return result;
   },
 
+  /**
+   * fetchLocal() returns the records from the local database for the specified bucket/collection.
+   */
   async fetchLocal(bucket, collection) {
     const id = Preferences.get(`services.blocklist.${collection}.collection`);
     return this._localDb(bucket, id, async (localCollection) => {
@@ -270,6 +328,9 @@ const controller = {
     });
   },
 
+  /**
+   * deleteLocal() deletes the local records of the specified bucket/collection.
+   */
   async deleteLocal(bucket, collection) {
     Preferences.reset(`services.blocklist.${collection}.checked`);
     const id = Preferences.get(`services.blocklist.${collection}.collection`);
@@ -278,11 +339,14 @@ const controller = {
     });
   },
 
+  /**
+   * deleteAllLocal() deletes the local records of every collection.
+   */
   async deleteAllLocal() {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
     // Execute delete sequentially.
-    COLLECTIONS.map((name) => {
+    COLLECTIONS.map(async (name) => {
       const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
       await controller.deleteLocal(bucket, name);
     });
@@ -292,7 +356,7 @@ const controller = {
 
 async function main() {
   await Promise.all([
-    showSettings(),
+    showPreferences(),
     showPollingStatus(),
     showBlocklistStatus(),
     showXmlStatus()
@@ -304,7 +368,7 @@ async function main() {
   comboEnv.value = environment;
   comboEnv.onchange = async (event) => {
     controller.setEnvironment(event.target.value);
-    await showSettings();
+    await showPreferences();
     await showXmlStatus();
   };
 
@@ -316,20 +380,20 @@ async function main() {
 
   // Poll for changes button.
   document.getElementById("run-poll").onclick = async () => {
-    await controller.checkVersions()
+    await controller.synchronizeRemoteSettings()
     await showPollingStatus();
     await showBlocklistStatus();
   }
 
   // Reset local polling data.
   document.getElementById("clear-poll-data").onclick = async () => {
-    controller.clearPollingData();
+    controller.clearPollingStatus();
     await showPollingStatus();
   }
 
   // Clear all data.
   document.getElementById("clear-all-data").onclick = async () => {
-    controller.clearPollingData();
+    controller.clearPollingStatus();
     await showPollingStatus();
     await controller.deleteAllLocal()
     await showBlocklistStatus();
@@ -337,8 +401,8 @@ async function main() {
 }
 
 
-async function showSettings() {
-  const result = controller.mainSettings();
+async function showPreferences() {
+  const result = controller.mainPreferences();
   const {
     blocklistsBucket,
     blocklistsEnabled,
@@ -389,7 +453,8 @@ async function showPollingStatus() {
     changespath,
     lastPoll,
     timestamp,
-    clockskew } = result;
+    clockskew,
+  } = result;
 
   const url = `${server}${changespath}`;
   document.getElementById("polling-url").textContent = url;
@@ -417,7 +482,8 @@ async function showBlocklistStatus() {
       lastChecked,
       records,
       localTimestamp,
-      timestamp } = collection;
+      timestamp,
+    } = collection;
 
     const infos = tpl.content.cloneNode(true);
     infos.querySelector("div").setAttribute("id", `status-${id}`);
