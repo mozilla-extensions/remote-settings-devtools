@@ -109,6 +109,7 @@ const controller = {
     const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
     const signing = Preferences.get("services.blocklist.signing.enforced");
     const rootHash = Preferences.get("security.content.signature.root_hash");
+    const loadDump = Preferences.get("services.blocklist.load_dump");
     const server = Preferences.get("services.settings.server");
 
     return {
@@ -435,6 +436,7 @@ async function showPreferences() {
     oneCRLviaAmo,
     signing,
     rootHash,
+    loadDump,
     server,
   } = result;
 
@@ -446,6 +448,7 @@ async function showPreferences() {
   document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
   document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
   document.getElementById("signing").textContent = signing;
+  document.getElementById("load-dump").textContent = loadDump;
   document.getElementById("root-hash").textContent = rootHash;
 }
 
