@@ -101,7 +101,7 @@ const controller = {
   /**
    * mainPreferences() returns the values of the internal preferences related to remote settings.
    */
-  mainPreferences() {
+  async mainPreferences() {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const blocklistsEnabled = Preferences.get("services.blocklist.update_enabled");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
@@ -111,7 +111,7 @@ const controller = {
     const rootHash = Preferences.get("security.content.signature.root_hash");
     const server = Preferences.get("services.settings.server");
 
-    return Promise.resolve({
+    return {
       blocklistsBucket,
       blocklistsEnabled,
       pinningBucket,
@@ -119,8 +119,9 @@ const controller = {
       oneCRLviaAmo,
       signing,
       rootHash,
+      loadDump,
       server,
-    });
+    };
   },
 
   /**
@@ -140,6 +141,10 @@ const controller = {
   async refreshXml() {
     const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
     blocklist.notify(null);
+    // It's super complicated to get a signal when it's done. Just wait for now.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 5000)
+    });
   },
 
   /**
@@ -157,7 +162,7 @@ const controller = {
    * clearPollingStatus() resets the local preferences about the global polling status.
    * It will simulate a profile that has never been synchronized.
    */
-  clearPollingStatus() {
+  async clearPollingStatus() {
     Preferences.reset("services.blocklist.last_update_seconds");
     Preferences.reset("services.blocklist.last_etag");
     Preferences.reset("services.blocklist.clock_skew_seconds");
@@ -209,7 +214,7 @@ const controller = {
     const monitorUrl = `${server}${changespath}`;
 
     const response = await fetch(monitorUrl);
-    const {data} = response.json();
+    const {data} = await response.json();
 
     const timestampsById = data.reduce((acc, entry) => {
       const {collection, bucket, last_modified} = entry;
@@ -307,11 +312,11 @@ const controller = {
     const path = "kinto.sqlite";
     const config = {remote: server, adapter: FirefoxAdapter, bucket};
 
-    const sqliteHandle = FirefoxAdapter.openConnection({path});
+    const sqliteHandle = await FirefoxAdapter.openConnection({path});
     const options = Object.assign({}, config, {adapterOptions: {sqliteHandle}})
     const localCollection = new Kinto(options).collection(collection);
 
-    const result = callback(localCollection);
+    const result = await callback(localCollection);
     await sqliteHandle.close();
     return result;
   },
@@ -322,8 +327,8 @@ const controller = {
   async fetchLocal(bucket, collection) {
     const id = Preferences.get(`services.blocklist.${collection}.collection`);
     return this._localDb(bucket, id, async (localCollection) => {
-      const timestamp = localCollection.db.getLastModified();
-      const {data: records} = localCollection.list();
+      const timestamp = await localCollection.db.getLastModified();
+      const {data: records} = await localCollection.list();
       return {localTimestamp: timestamp, records};
     });
   },
@@ -335,7 +340,7 @@ const controller = {
     Preferences.reset(`services.blocklist.${collection}.checked`);
     const id = Preferences.get(`services.blocklist.${collection}.collection`);
     return this._localDb(bucket, id, async (localCollection) => {
-      return localCollection.clear();
+      await localCollection.clear();
     });
   },
 
@@ -346,16 +351,17 @@ const controller = {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
     // Execute delete sequentially.
-    COLLECTIONS.map(async (name) => {
+    await Promise.all(COLLECTIONS.map(async (name) => {
       const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
       await controller.deleteLocal(bucket, name);
-    });
+    }));
   },
 };
 
 
 async function main() {
-  await Promise.all([
+  // Populate UI in the background (ie. don't await)
+  Promise.all([
     showPreferences(),
     showPollingStatus(),
     showBlocklistStatus(),
@@ -376,33 +382,51 @@ async function main() {
   document.getElementById("xml-refresh").onclick = async () => {
     await controller.refreshXml();
     await showXmlStatus();
+    await showPollingStatus();
+    await showBlocklistStatus();
   }
 
   // Poll for changes button.
   document.getElementById("run-poll").onclick = async () => {
-    await controller.synchronizeRemoteSettings()
+    try {
+      await controller.synchronizeRemoteSettings()
+    } catch(e) {
+      showGlobalError(e)
+    }
     await showPollingStatus();
     await showBlocklistStatus();
   }
 
   // Reset local polling data.
   document.getElementById("clear-poll-data").onclick = async () => {
-    controller.clearPollingStatus();
+    await controller.clearPollingStatus();
     await showPollingStatus();
   }
 
   // Clear all data.
   document.getElementById("clear-all-data").onclick = async () => {
-    controller.clearPollingStatus();
+    try {
+      await controller.clearPollingStatus();
+      await controller.deleteAllLocal();
+    } catch(e) {
+      showGlobalError(e)
+    }
     await showPollingStatus();
-    await controller.deleteAllLocal()
     await showBlocklistStatus();
   }
 }
 
 
+function asDate(timestamp) {
+  return timestamp ? new Date(timestamp) : "⚠ undefined";
+}
+
+function showGlobalError(error) {
+  document.getElementById("polling-error").textContent = error;
+}
+
 async function showPreferences() {
-  const result = controller.mainPreferences();
+  const result = await controller.mainPreferences();
   const {
     blocklistsBucket,
     blocklistsEnabled,
@@ -427,14 +451,15 @@ async function showPreferences() {
 
 
 async function showXmlStatus() {
-  const result = controller.xmlStatus();
+  const result = await controller.xmlStatus();
   const {
     url,
     interval,
     pingCount,
     pingTotal,
     lastUpdate,
-    ageDays } = result;
+    ageDays
+  } = result;
 
   document.getElementById("xml-url").textContent = url;
   document.getElementById("xml-url").setAttribute("href", url);
@@ -446,7 +471,7 @@ async function showXmlStatus() {
 }
 
 async function showPollingStatus() {
-  const result = controller.pollingStatus();
+  const result = await controller.pollingStatus();
   const {
     server,
     backoff,
