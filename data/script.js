@@ -11,7 +11,8 @@ const {
   AddonBlocklistClient,
   GfxBlocklistClient,
   PluginBlocklistClient,
-  PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
+  PinningPreloadClient
+} = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 
 const CLIENTS = {
@@ -32,6 +33,11 @@ const COLLECTIONS = ["addons", "onecrl", "plugins", "gfx", "pinning"];
 
 
 const controller = {
+
+  /**
+   * guessEnvironment() will read the current preferences and return the
+   * environment name (suffixed with `preview` if relevant).
+   */
   guessEnvironment() {
     const server = Preferences.get("services.settings.server");
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
@@ -48,6 +54,10 @@ const controller = {
     return environment;
   },
 
+  /**
+   * setEnvironment() will set the necessary internal preferences to switch from
+   * an environment to another.
+   */
   setEnvironment(env) {
     switch(env) {
       case "prod":
@@ -89,11 +99,10 @@ const controller = {
     }
   },
 
-  checkVersions() {
-    return BlocklistUpdater.checkVersions();
-  },
-
-  mainSettings() {
+  /**
+   * mainPreferences() returns the values of the internal preferences related to remote settings.
+   */
+  async mainPreferences() {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const blocklistsEnabled = Preferences.get("services.blocklist.update_enabled");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
@@ -101,9 +110,10 @@ const controller = {
     const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
     const signing = Preferences.get("services.blocklist.signing.enforced");
     const rootHash = Preferences.get("security.content.signature.root_hash");
+    const loadDump = Preferences.get("services.blocklist.load_dump");
     const server = Preferences.get("services.settings.server");
 
-    return Promise.resolve({
+    return {
       blocklistsBucket,
       blocklistsEnabled,
       pinningBucket,
@@ -111,20 +121,63 @@ const controller = {
       oneCRLviaAmo,
       signing,
       rootHash,
+      loadDump,
       server,
+    };
+  },
+
+  /**
+   * synchronizeRemoteSettings() is the one of the main synchronization actions. It triggers
+   * a Kinto remote settings synchronization, as it would from the XPCOM registry.
+   * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#596
+   */
+  async synchronizeRemoteSettings() {
+    return BlocklistUpdater.checkVersions();
+  },
+
+  /**
+   * refreshXml() is the global synchronization action. It triggers everything, from
+   * XML refresh to Kinto remote settings synchronization.
+   * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#483
+   */
+  async refreshXml() {
+    const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
+    blocklist.notify(null);
+    // It's super complicated to get a signal when it's done. Just wait for now.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 5000)
     });
   },
 
-  clearPollingData() {
+  /**
+   * forceSync() will trigger a synchronization at the Kinto level only for the specified collection.
+   */
+  async forceSync(collection) {
+    const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
+    const lastModified = Infinity;  // Force sync, never up-to-date.
+
+    const id = Preferences.get(`services.blocklist.${collection}.collection`);
+    return CLIENTS[id].maybeSync(lastModified, serverTimeMs);
+  },
+
+  /**
+   * clearPollingStatus() resets the local preferences about the global polling status.
+   * It will simulate a profile that has never been synchronized.
+   */
+  async clearPollingStatus() {
     Preferences.reset("services.blocklist.last_update_seconds");
     Preferences.reset("services.blocklist.last_etag");
     Preferences.reset("services.blocklist.clock_skew_seconds");
     Preferences.reset("services.settings.server.backoff");
   },
 
-  pollingStatus() {
+  /**
+   * pollingStatus() returns the current preferences values about the
+   * global polling status.
+   */
+  async pollingStatus() {
     const prefs = [
-      // Settings
+      // Preferences
       { target: "server",      name: "services.settings.server"} ,
       { target: "changespath", name: "services.blocklist.changes.path" },
       // Status
@@ -139,7 +192,7 @@ const controller = {
       const value = Preferences.get(name);
       switch (target) {
         case "lastPoll":
-          result[target] = value ? new Date(parseInt(value, 10) * 1000) : undefined;
+          result[target] = value ? parseInt(value, 10) * 1000 : undefined;
           break;
         case "timestamp":
           result[target] = value ? parseInt(value.replace('"', ''), 10) : undefined;
@@ -148,10 +201,13 @@ const controller = {
           result[target] = value;
       }
     }
-    return Promise.resolve(result);
+    return result;
   },
 
-  blocklistStatus() {
+  /**
+   * blocklistStatus() returns information about each blocklist collection.
+   */
+  async blocklistStatus() {
     const server = Preferences.get("services.settings.server");
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
@@ -159,37 +215,45 @@ const controller = {
     const changespath = Preferences.get("services.blocklist.changes.path");
     const monitorUrl = `${server}${changespath}`;
 
-    return fetch(monitorUrl)
-      .then((response) => response.json())
-      .then(({data}) => {
-        return data.reduce((acc, entry) => {
-          const {collection, bucket, last_modified} = entry;
-          const currentBucket = collection == "pinning" ? pinningBucket : blocklistsBucket;
-          if (bucket == currentBucket) {
-            acc[collection] = acc[collection] || last_modified;
-          }
-          return acc;
-        }, {});
-      })
-      .then((timestampsById) => {
-        return Promise.all(COLLECTIONS.map((name) => {
-          const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
-          const id = Preferences.get(`services.blocklist.${name}.collection`);
-          const url = `${server}/buckets/${bucket}/collections/${id}/records`;
-          const lastCheckedSeconds = Preferences.get(`services.blocklist.${name}.checked`);
-          const lastChecked = lastCheckedSeconds ? new Date(parseInt(lastCheckedSeconds, 10) * 1000) : undefined;
-          const timestamp = timestampsById[id];
+    const response = await fetch(monitorUrl);
+    const {data} = await response.json();
 
-          return this.fetchLocal(bucket, name)
-            .then((local) => {
-              const {localTimestamp, records} = local;
-              return {id, name, bucket, url, lastChecked, timestamp, localTimestamp, records};
-            });
-        }));
-      })
+    const timestampsById = data.reduce((acc, entry) => {
+      const {collection, bucket, last_modified} = entry;
+      const currentBucket = collection == "pinning" ? pinningBucket : blocklistsBucket;
+      if (bucket == currentBucket) {
+        acc[collection] = acc[collection] || last_modified;
+      }
+      return acc;
+    }, {});
+
+    return Promise.all(COLLECTIONS.map(async (name) => {
+      const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
+      const id = Preferences.get(`services.blocklist.${name}.collection`);
+      const url = `${server}/buckets/${bucket}/collections/${id}/records`;
+      const lastCheckedSeconds = Preferences.get(`services.blocklist.${name}.checked`);
+      const lastChecked = lastCheckedSeconds ? parseInt(lastCheckedSeconds, 10) * 1000 : undefined;
+      const timestamp = timestampsById[id];
+
+      const local = await this.fetchLocal(bucket, name);
+      const {localTimestamp, records} = local;
+      return {
+        id,
+        name,
+        bucket,
+        url,
+        lastChecked,
+        timestamp,
+        localTimestamp,
+        records
+      };
+    }));
   },
 
-  xmlStatus() {
+  /**
+   * xmlStatus() returns information about the legacy XML blocklist file.
+   */
+  async xmlStatus() {
     const urlTemplate = Preferences.get("extensions.blocklist.url");
     const interval    = Preferences.get("extensions.blocklist.interval");
     const pingCount   = Preferences.get("extensions.blocklist.pingCountVersion");
@@ -235,230 +299,253 @@ const controller = {
                            .replace("%OS_VERSION%", encodeURIComponent(osVersion))
                            .replace("%DISTRIBUTION%", distribution)
                            .replace("%DISTRIBUTION_VERSION%", distributionVersion);
-    return Promise.resolve({url, interval, pingCount, pingTotal, lastUpdate, ageDays});
+    return {
+      url,
+      interval,
+      pingCount,
+      pingTotal,
+      lastUpdate,
+      ageDays
+    };
   },
 
-  refreshXml() {
-    const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
-    return new Promise((resolve) => {
-      blocklist.notify(null);
-      resolve();
-    });
-  },
-
-  forceSync(collection) {
-    const serverTimeMs = parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) * 1000;
-    const lastModified = Infinity;  // Force sync, never up-to-date.
-
-    const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return CLIENTS[id].maybeSync(lastModified, serverTimeMs);
-  },
-
-  _localDb(bucket, collection, callback) {
-    // XXX: simplify this using await/async
+  async _localDb(bucket, collection, callback) {
     const server = "http://unused/v1";
     const path = "kinto.sqlite";
     const config = {remote: server, adapter: FirefoxAdapter, bucket};
 
-    return FirefoxAdapter.openConnection({path})
-      .then((sqliteHandle) => {
-        const options = Object.assign({}, config, {adapterOptions: {sqliteHandle}})
-        const localCollection = new Kinto(options).collection(collection);
+    const sqliteHandle = await FirefoxAdapter.openConnection({path});
+    const options = Object.assign({}, config, {adapterOptions: {sqliteHandle}})
+    const localCollection = new Kinto(options).collection(collection);
 
-        return callback(localCollection)
-          .then((result) => {
-            return sqliteHandle.close()
-              .then(() => result);
-          });
-      });
+    const result = await callback(localCollection);
+    await sqliteHandle.close();
+    return result;
   },
 
-  fetchLocal(bucket, collection) {
+  /**
+   * fetchLocal() returns the records from the local database for the specified bucket/collection.
+   */
+  async fetchLocal(bucket, collection) {
     const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return this._localDb(bucket, id, (localCollection) => {
-      return localCollection.db.getLastModified()
-        .then((timestamp) => {
-          return localCollection.list()
-            .then(({data: records}) => {
-              return {localTimestamp: timestamp, records};
-            });
-          });
-      });
-  },
-
-  deleteLocal(bucket, collection) {
-    Preferences.reset(`services.blocklist.${collection}.checked`);
-    const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return this._localDb(bucket, id, (localCollection) => {
-      return localCollection.clear();
+    return this._localDb(bucket, id, async (localCollection) => {
+      const timestamp = await localCollection.db.getLastModified();
+      const {data: records} = await localCollection.list();
+      return {localTimestamp: timestamp, records};
     });
   },
 
-  deleteAllLocal() {
+  /**
+   * deleteLocal() deletes the local records of the specified bucket/collection.
+   */
+  async deleteLocal(bucket, collection) {
+    Preferences.reset(`services.blocklist.${collection}.checked`);
+    const id = Preferences.get(`services.blocklist.${collection}.collection`);
+    return this._localDb(bucket, id, async (localCollection) => {
+      await localCollection.clear();
+    });
+  },
+
+  /**
+   * deleteAllLocal() deletes the local records of every collection.
+   */
+  async deleteAllLocal() {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
     // Execute delete sequentially.
-    return COLLECTIONS.reduce((acc, name) => {
+    await Promise.all(COLLECTIONS.map(async (name) => {
       const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
-      return acc.then(() => controller.deleteLocal(bucket, name));
-    }, Promise.resolve([]));
+      await controller.deleteLocal(bucket, name);
+    }));
   },
 };
 
 
-function main() {
-  showSettings();
-  showPollingStatus();
-  showBlocklistStatus();
-  showXmlStatus();
+async function main() {
+  // Populate UI in the background (ie. don't await)
+  Promise.all([
+    showPreferences(),
+    showPollingStatus(),
+    showBlocklistStatus(),
+    showXmlStatus()
+  ]);
 
   // Change environment.
   const environment = controller.guessEnvironment();
   const comboEnv = document.getElementById("environment");
   comboEnv.value = environment;
-  comboEnv.onchange = (event) => {
+  comboEnv.onchange = async (event) => {
     controller.setEnvironment(event.target.value);
-    showSettings();
-    showXmlStatus();
+    await showPreferences();
+    await showXmlStatus();
   };
 
   // XML refresh button.
-  document.getElementById("xml-refresh").onclick = () => {
-    controller.refreshXml()
-      .then(() => {
-        showXmlStatus();
-      });
+  document.getElementById("xml-refresh").onclick = async () => {
+    await controller.refreshXml();
+    await showXmlStatus();
+    await showPollingStatus();
+    await showBlocklistStatus();
   }
 
   // Poll for changes button.
-  document.getElementById("run-poll").onclick = () => {
-    controller.checkVersions()
-      .then(() => {
-        showPollingStatus();
-        showBlocklistStatus();
-      });
+  document.getElementById("run-poll").onclick = async () => {
+    try {
+      await controller.synchronizeRemoteSettings()
+    } catch(e) {
+      showGlobalError(e)
+    }
+    await showPollingStatus();
+    await showBlocklistStatus();
   }
 
   // Reset local polling data.
-  document.getElementById("clear-poll-data").onclick = () => {
-    controller.clearPollingData();
-    showPollingStatus();
+  document.getElementById("clear-poll-data").onclick = async () => {
+    await controller.clearPollingStatus();
+    await showPollingStatus();
   }
 
   // Clear all data.
-  document.getElementById("clear-all-data").onclick = () => {
-    controller.clearPollingData();
-    showPollingStatus();
-    controller.deleteAllLocal()
-      .then(showBlocklistStatus);
+  document.getElementById("clear-all-data").onclick = async () => {
+    try {
+      await controller.clearPollingStatus();
+      await controller.deleteAllLocal();
+    } catch(e) {
+      showGlobalError(e)
+    }
+    await showPollingStatus();
+    await showBlocklistStatus();
   }
 }
 
 
-function showSettings() {
-  controller.mainSettings()
-    .then((result) => {
-      const {
-        blocklistsBucket,
-        blocklistsEnabled,
-        pinningBucket,
-        pinningEnabled,
-        oneCRLviaAmo,
-        signing,
-        rootHash,
-        server,
-      } = result;
+function asDate(timestamp) {
+  return timestamp ? new Date(timestamp) : "⚠ undefined";
+}
 
-      document.getElementById("server").textContent = server;
-      document.getElementById("server").setAttribute("href", server);
-      document.getElementById("blocklists-bucket").textContent = blocklistsBucket;
-      document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
-      document.getElementById("pinning-bucket").textContent = pinningBucket;
-      document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
-      document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
-      document.getElementById("signing").textContent = signing;
-      document.getElementById("root-hash").textContent = rootHash;
-    });
+function showGlobalError(error) {
+  document.getElementById("polling-error").textContent = error;
+}
+
+async function showPreferences() {
+  const result = await controller.mainPreferences();
+  const {
+    blocklistsBucket,
+    blocklistsEnabled,
+    pinningBucket,
+    pinningEnabled,
+    oneCRLviaAmo,
+    signing,
+    rootHash,
+    loadDump,
+    server,
+  } = result;
+
+  document.getElementById("server").textContent = server;
+  document.getElementById("server").setAttribute("href", server);
+  document.getElementById("blocklists-bucket").textContent = blocklistsBucket;
+  document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
+  document.getElementById("pinning-bucket").textContent = pinningBucket;
+  document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
+  document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
+  document.getElementById("signing").textContent = signing;
+  document.getElementById("load-dump").textContent = loadDump;
+  document.getElementById("root-hash").textContent = rootHash;
 }
 
 
-function showXmlStatus() {
-  controller.xmlStatus()
-    .then((result) => {
-      const {url, interval, pingCount, pingTotal, lastUpdate, ageDays} = result;
+async function showXmlStatus() {
+  const result = await controller.xmlStatus();
+  const {
+    url,
+    interval,
+    pingCount,
+    pingTotal,
+    lastUpdate,
+    ageDays
+  } = result;
 
-      document.getElementById("xml-url").textContent = url;
-      document.getElementById("xml-url").setAttribute("href", url);
-      document.getElementById("xml-interval").textContent = interval;
-      document.getElementById("xml-pingcount").textContent = pingCount;
-      document.getElementById("xml-pingtotal").textContent = pingTotal;
-      document.getElementById("xml-lastupdate").textContent = lastUpdate;
-      document.getElementById("xml-agedays").textContent = ageDays;
-    });
+  document.getElementById("xml-url").textContent = url;
+  document.getElementById("xml-url").setAttribute("href", url);
+  document.getElementById("xml-interval").textContent = interval;
+  document.getElementById("xml-pingcount").textContent = pingCount;
+  document.getElementById("xml-pingtotal").textContent = pingTotal;
+  document.getElementById("xml-lastupdate").textContent = lastUpdate;
+  document.getElementById("xml-agedays").textContent = ageDays;
 }
 
-function showPollingStatus() {
-  controller.pollingStatus()
-    .then((result) => {
-      const {
-        server,
-        backoff,
-        changespath,
-        lastPoll,
-        timestamp,
-        clockskew } = result;
+async function showPollingStatus() {
+  const result = await controller.pollingStatus();
+  const {
+    server,
+    backoff,
+    changespath,
+    lastPoll,
+    timestamp,
+    clockskew,
+  } = result;
 
-      const url = `${server}${changespath}`;
-      document.getElementById("polling-url").textContent = url;
-      document.getElementById("polling-url").setAttribute("href", url);
-      document.getElementById("backoff").textContent = backoff;
-      document.getElementById("last-poll").textContent = lastPoll;
-      document.getElementById("timestamp").textContent = timestamp;
-      document.getElementById("human-timestamp").textContent = timestamp ? new Date(timestamp) : undefined;
-      document.getElementById("clockskew").textContent = clockskew;
-    });
+  const url = `${server}${changespath}`;
+  document.getElementById("polling-url").textContent = url;
+  document.getElementById("polling-url").setAttribute("href", url);
+  document.getElementById("backoff").textContent = backoff;
+  document.getElementById("last-poll").textContent = asDate(lastPoll);
+  document.getElementById("timestamp").textContent = timestamp;
+  document.getElementById("clockskew").textContent = clockskew;
+  document.getElementById("human-timestamp").textContent = asDate(timestamp);
 }
 
 
-function showBlocklistStatus() {
+async function showBlocklistStatus() {
   const tpl = document.getElementById("collection-status-tpl");
   const statusList = document.getElementById("blocklists-status");
-  return controller.blocklistStatus()
-    .then((collections) => {
-      statusList.innerHTML = "";
+  const collections = await controller.blocklistStatus();
 
-      collections.forEach((collection) => {
-        const {bucket, id, name, url, lastChecked, records, localTimestamp, timestamp} = collection;
+  statusList.innerHTML = "";
 
-        const infos = tpl.content.cloneNode(true);
-        infos.querySelector("div").setAttribute("id", `status-${id}`);
-        infos.querySelector(".blocklist").textContent = name;
-        infos.querySelector(".url a").textContent = `${bucket}/${id}`;
-        infos.querySelector(".url a").setAttribute("href", url);
-        infos.querySelector(".human-timestamp").textContent = timestamp ? new Date(timestamp) : "⚠ undefined";
-        infos.querySelector(".timestamp").textContent = timestamp;
-        infos.querySelector(".human-local-timestamp").textContent = localTimestamp ? new Date(localTimestamp) : undefined;
-        infos.querySelector(".local-timestamp").textContent = localTimestamp;
-        infos.querySelector(".nb-records").textContent = records.length;
-        infos.querySelector(".last-check").textContent = lastChecked;
+  collections.forEach((collection) => {
+    const {
+      bucket,
+      id,
+      name,
+      url,
+      lastChecked,
+      records,
+      localTimestamp,
+      timestamp,
+    } = collection;
 
-        infos.querySelector(".clear-data").onclick = () => {
-          controller.deleteLocal(bucket, name)
-            .then(showBlocklistStatus);
-        }
-        infos.querySelector(".sync").onclick = () => {
-          let error = '';
-          controller.forceSync(name)
-            .catch((e) => error = e)
-            .then(showBlocklistStatus)
-            .then(() => {
-              if (error) console.log(error);
-              document.querySelector(`#status-${id} .error`).textContent = error;
-            });
-        }
-        statusList.appendChild(infos);
-      });
-    });
+    const infos = tpl.content.cloneNode(true);
+    infos.querySelector("div").setAttribute("id", `status-${id}`);
+    infos.querySelector(".blocklist").textContent = name;
+    infos.querySelector(".url a").textContent = `${bucket}/${id}`;
+    infos.querySelector(".url a").setAttribute("href", url);
+    infos.querySelector(".human-timestamp").textContent = asDate(timestamp);
+    infos.querySelector(".timestamp").textContent = timestamp;
+    infos.querySelector(".human-local-timestamp").textContent = asDate(localTimestamp);
+    infos.querySelector(".local-timestamp").textContent = localTimestamp;
+    infos.querySelector(".nb-records").textContent = records.length;
+    infos.querySelector(".last-check").textContent = asDate(lastChecked);
+
+    infos.querySelector(".clear-data").onclick = async () => {
+      await controller.deleteLocal(bucket, name)
+      await showBlocklistStatus();
+    }
+    infos.querySelector(".sync").onclick = async () => {
+      let error = '';
+      try {
+        await controller.forceSync(name)
+      } catch(e) {
+        error = e;
+      }
+      await showBlocklistStatus();
+      if (error) {
+        console.log(error);
+        document.querySelector(`#status-${id} .error`).textContent = error;
+      }
+    }
+    statusList.appendChild(infos);
+  });
 }
 
 
