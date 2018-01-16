@@ -567,9 +567,10 @@ function showTelemetryEvent(source, status) {
   const tpl = document.getElementById("telemetry-event-tpl");
   const el = tpl.content.cloneNode(true);
   el.querySelector("li").setAttribute("class", klass);
+  el.querySelector(".time").textContent = (new Date()).toLocaleTimeString([], {hour12: false});
   el.querySelector(".source").textContent = source;
   el.querySelector(".status").textContent = status;
 
   const eventList = document.querySelector("#telemetry-events ul");
-  eventList.appendChild(el);
+  eventList.insertBefore(el, eventList.firstChild);
 }

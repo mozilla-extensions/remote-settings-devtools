@@ -3,6 +3,10 @@
 html, body {
   max-height: 100vh;
   max-width: 100vw;
+
+  --success-text-color: green;
+  --error-text-color: red;
+  --subtext-color: #888;
 }
 
 body {
@@ -50,7 +54,7 @@ section {
 }
 
 .local-timestamp, .timestamp, #timestamp {
-  color: #888;
+  color: var(--subtext-color);
 }
 
 dt {
@@ -58,16 +62,45 @@ dt {
 }
 
 .error {
-  color: red;
+  color: var(--error-text-color);
+}
+
+.success {
+  color: var(--success-text-color);
+}
+
+#telemetry-events {
+  max-height: 100%;
+  overflow: auto;
+}
+
+#telemetry-events .time {
+  color: var(--subtext-color);
 }
 
 #telemetry-events .status {
   text-transform: uppercase;
+  border: 1px dashed;
 }
 
 #telemetry-events ul {
-  padding-left: 1em;
+  padding-left: 0;
+  list-style-type: none;
 }
+
+#telemetry-events li {
+  display: flex;
+}
+
+#telemetry-events .source {
+  flex-grow: 1;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+#telemetry-events li:nth-last-child(-n+6) { opacity: 0.8 }
+#telemetry-events li:nth-last-child(-n+3) { opacity: 0.5 }
+#telemetry-events li:nth-last-child(-n+1) { opacity: 0.2 }
 
 #telemetry-events ul:empty::after {
   content: attr(placeholder);
