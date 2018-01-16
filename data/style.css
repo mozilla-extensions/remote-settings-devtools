@@ -1,0 +1,53 @@
+@import url("chrome://global/skin/in-content/common.css");
+
+html, body {
+  max-height: 100vh;
+  max-width: 100vw;
+}
+
+body {
+  margin: 40px;
+  display: grid;
+  grid-template-areas:
+      "title      title      title       title"
+      "settings   xml        polling     telemetry"
+      "status     status     status      telemetry"
+      "status     status     status      telemetry";
+  grid-template-columns: repeat(3, 1fr) max-content;
+}
+
+h1 { grid-area: title }
+#blocklists-settings { grid-area: settings }
+#blocklists-xml { grid-area: xml }
+#blocklists-polling { grid-area: polling }
+#blocklists-status { grid-area: status }
+#telemetry-events { grid-area: telemetry }
+
+section, .blocklist-status {
+  display: inline-block;
+  vertical-align: top;
+  padding: 10px;
+  margin: 10px;
+  background-color: white;
+  word-wrap: break-word;
+}
+
+.local-timestamp, .timestamp, #timestamp {
+  color: #888;
+}
+
+dt {
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+}
+
+.status {
+  text-transform: uppercase;
+}
+
+#telemetry-events ul:empty::after {
+  content: attr(placeholder);
+}
