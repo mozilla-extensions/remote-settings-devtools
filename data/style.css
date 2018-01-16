@@ -61,6 +61,11 @@ dt {
   color: red;
 }
 
+#telemetry-events {
+  max-height: 100%;
+  overflow: auto;
+}
+
 #telemetry-events .status {
   text-transform: uppercase;
 }

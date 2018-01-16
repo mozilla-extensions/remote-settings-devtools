@@ -572,5 +572,5 @@ function showTelemetryEvent(source, status) {
   el.querySelector(".status").textContent = status;
 
   const eventList = document.querySelector("#telemetry-events ul");
-  eventList.appendChild(el);
+  eventList.insertBefore(el, eventList.firstChild);
 }
