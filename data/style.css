@@ -14,6 +14,7 @@ body {
       "status     status     status      telemetry"
       "status     status     status      telemetry";
   grid-template-columns: repeat(3, 1fr) max-content;
+  grid-gap: 10px;
 }
 
 h1 { grid-area: title }
@@ -35,12 +36,16 @@ h1 { grid-area: title }
   display: inline-block;
 }
 
-section, .blocklist-status {
+section {
+  border: 1px solid var(--in-content-border-color);
+  background-color: white;
+  padding: 10px;
+}
+
+.blocklist-status {
+  margin: 10px;
   display: inline-block;
   vertical-align: top;
-  padding: 10px;
-  margin: 10px;
-  background-color: white;
   word-wrap: break-word;
 }
 
@@ -56,8 +61,12 @@ dt {
   color: red;
 }
 
-.status {
+#telemetry-events .status {
   text-transform: uppercase;
+}
+
+#telemetry-events ul {
+  padding-left: 1em;
 }
 
 #telemetry-events ul:empty::after {

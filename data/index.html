@@ -11,10 +11,10 @@
 
     <section id="action-box">
       <h3>Sync actions</h3>
-      <button id="xml-refresh">XML refresh</button>
-      <button id="run-poll">Poll server</button>
-      <button id="clear-poll-data">Clear poll data</button>
-      <button id="clear-all-data">Clear ALL local data</button>
+      <button id="xml-refresh" title="Full synchronization. Equivalent of nsBlocklistService::notify()">XML refresh</button>
+      <button id="run-poll" title="Poll for changes in blocklist clients (bypass XPCOM/XML)">Poll server</button>
+      <button id="clear-poll-data" title="Clear polling status">Clear poll data</button>
+      <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
     </section>
 
     <section id="blocklists-settings">
@@ -119,8 +119,8 @@
 
     <section id="blocklists-status"></section>
     <section id="telemetry-events">
-      <h2>Telemetry Events</h2>
-      <ul placeholder="(None yet)"></ul>
+      <h2>Uptake Telemetry Events</h2>
+      <ul placeholder="None yet, first run sync actions."></ul>
     </section>
 
     <template id="collection-status-tpl">
