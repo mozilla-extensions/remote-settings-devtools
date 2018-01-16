@@ -3,41 +3,22 @@
   <head>
     <meta charset="utf-8">
     <title>about:remotesettings</title>
-    <style>
-      section, .blocklist-status {
-        display: inline-block;
-        vertical-align: top;
-        padding: 10px;
-        margin: 10px;
-        background-color: white;
-      }
-
-      .local-timestamp, .timestamp, #timestamp {
-        color: #888;
-      }
-
-      dt {
-        font-weight: bold;
-      }
-
-      .error {
-        color: red;
-      }
-
-      .status {
-        text-transform: uppercase;
-      }
-
-      #telemetry-events ul:empty::after {
-        content: attr(data-empty-message);
-      }
-    </style>
+    <link rel="stylesheet" href="chrome://aboutremotesettings/content/style.css"
+          type="text/css"/>
   </head>
   <body>
-    <h1>about:remotesettings</h1>
+    <h1>Remote settings</h1>
+
+    <section id="action-box">
+      <h3>Sync actions</h3>
+      <button id="xml-refresh" title="Full synchronization. Equivalent of nsBlocklistService::notify()">XML refresh</button>
+      <button id="run-poll" title="Poll for changes in blocklist clients (bypass XPCOM/XML)">Poll server</button>
+      <button id="clear-poll-data" title="Clear polling status">Clear poll data</button>
+      <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
+    </section>
 
     <section id="blocklists-settings">
-      <h1>Configuration</h1>
+      <h2>Configuration</h2>
       <label>
         Environment
         <select id="environment">
@@ -87,7 +68,7 @@
     </section>
 
     <section id="xml-status">
-      <h1>XML Status</h1>
+      <h2>XML Status</h2>
       <dl>
         <dt>URL</dt>
         <dd>(guessed) <a id="xml-url">N/A</a></dd>
@@ -108,11 +89,10 @@
         <dt>Last update</dt>
         <dd><span id="xml-lastupdate">N/A</span> (<span id="xml-agedays">?</span> days)</dd>
       </dl>
-      <button id="xml-refresh">XML refresh</button>
     </section>
 
     <section id="polling-status">
-      <h1>Polling status</h1>
+      <h2>Polling status</h2>
       <div id="polling-error" class="error"></div>
       <dl>
         <dt>URL</dt>
@@ -135,15 +115,12 @@
         <dt>Backoff</dt>
         <dd id="backoff">N/A</dd>
       </dl>
-      <button id="run-poll">Poll server</button>
-      <button id="clear-poll-data">Clear poll data</button>
-      <button id="clear-all-data">Clear ALL local data</button>
     </section>
 
     <section id="blocklists-status"></section>
     <section id="telemetry-events">
-      <h2>Telemetry Events</h2>
-      <ul data-empty-message="(None yet)"></ul>
+      <h2>Uptake Telemetry Events</h2>
+      <ul placeholder="None yet, first run sync actions."></ul>
     </section>
 
     <template id="collection-status-tpl">
