@@ -4,6 +4,7 @@ html, body {
   max-height: 100vh;
   max-width: 100vw;
 
+  --success-text-color: green;
   --error-text-color: red;
   --subtext-color: #888;
 }
@@ -64,6 +65,10 @@ dt {
   color: var(--error-text-color);
 }
 
+.success {
+  color: var(--success-text-color);
+}
+
 #telemetry-events {
   max-height: 100%;
   overflow: auto;
@@ -75,11 +80,22 @@ dt {
 
 #telemetry-events .status {
   text-transform: uppercase;
+  border: 1px dashed;
 }
 
 #telemetry-events ul {
-  padding-left: 0.5em;
+  padding-left: 0;
   list-style-type: none;
+}
+
+#telemetry-events li {
+  display: flex;
+}
+
+#telemetry-events .source {
+  flex-grow: 1;
+  margin-right: 5px;
+  margin-left: 5px;
 }
 
 #telemetry-events li:nth-last-child(-n+6) { opacity: 0.8 }
