@@ -40,13 +40,13 @@ section {
   border: 1px solid var(--in-content-border-color);
   background-color: white;
   padding: 10px;
+  word-break: break-all;
 }
 
 .blocklist-status {
   margin: 10px;
   display: inline-block;
   vertical-align: top;
-  word-wrap: break-word;
 }
 
 .local-timestamp, .timestamp, #timestamp {
