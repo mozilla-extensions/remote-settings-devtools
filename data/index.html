@@ -27,6 +27,10 @@
       .status {
         text-transform: uppercase;
       }
+
+      #telemetry-events ul:empty::after {
+        content: attr(data-empty-message);
+      }
     </style>
   </head>
   <body>
@@ -139,7 +143,7 @@
     <section id="blocklists-status"></section>
     <section id="telemetry-events">
       <h2>Telemetry Events</h2>
-      <ul></ul>
+      <ul data-empty-message="(None yet)"></ul>
     </section>
 
     <template id="collection-status-tpl">
