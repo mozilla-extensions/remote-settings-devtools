@@ -8,6 +8,15 @@
   </head>
   <body>
     <h1>Remote settings</h1>
+
+    <section id="action-box">
+      <h3>Sync actions</h3>
+      <button id="xml-refresh">XML refresh</button>
+      <button id="run-poll">Poll server</button>
+      <button id="clear-poll-data">Clear poll data</button>
+      <button id="clear-all-data">Clear ALL local data</button>
+    </section>
+
     <section id="blocklists-settings">
       <h2>Configuration</h2>
       <label>
@@ -80,7 +89,6 @@
         <dt>Last update</dt>
         <dd><span id="xml-lastupdate">N/A</span> (<span id="xml-agedays">?</span> days)</dd>
       </dl>
-      <button id="xml-refresh">XML refresh</button>
     </section>
 
     <section id="polling-status">
@@ -107,9 +115,6 @@
         <dt>Backoff</dt>
         <dd id="backoff">N/A</dd>
       </dl>
-      <button id="run-poll">Poll server</button>
-      <button id="clear-poll-data">Clear poll data</button>
-      <button id="clear-all-data">Clear ALL local data</button>
     </section>
 
     <section id="blocklists-status"></section>

@@ -9,7 +9,7 @@ body {
   margin: 40px;
   display: grid;
   grid-template-areas:
-      "title      title      title       title"
+      "title      actionbox  actionbox   telemetry"
       "settings   xml        polling     telemetry"
       "status     status     status      telemetry"
       "status     status     status      telemetry";
@@ -17,11 +17,23 @@ body {
 }
 
 h1 { grid-area: title }
+#action-box { grid-area: actionbox }
 #blocklists-settings { grid-area: settings }
 #blocklists-xml { grid-area: xml }
 #blocklists-polling { grid-area: polling }
 #blocklists-status { grid-area: status }
 #telemetry-events { grid-area: telemetry }
+
+#action-box {
+  justify-self: end;
+
+  border: 1px solid var(--in-content-border-color);
+  color: var(--in-content-text-color);
+}
+
+#action-box h3 {
+  display: inline-block;
+}
 
 section, .blocklist-status {
   display: inline-block;
