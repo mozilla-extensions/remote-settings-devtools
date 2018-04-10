@@ -1,16 +1,9 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
-const { Kinto } = Cu.import(
-  "resource://services-common/kinto-offline-client.js",
-  {}
-);
-const { FirefoxAdapter } = Cu.import(
-  "resource://services-common/kinto-storage-adapter.js",
-  {}
-);
-const BlocklistUpdater = Cu.import(
-  "resource://services-common/blocklist-updater.js",
+const { RemoteSettings } = Cu.import(
+  "resource://services-common/remote-settings.js",
   {}
 );
 const { UptakeTelemetry } = Cu.import(
@@ -19,21 +12,10 @@ const { UptakeTelemetry } = Cu.import(
 );
 const { UpdateUtils } = Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
-const {
-  OneCRLBlocklistClient,
-  AddonBlocklistClient,
-  GfxBlocklistClient,
-  PluginBlocklistClient,
-  PinningPreloadClient
-} = Cu.import("resource://services-common/blocklist-clients.js", {});
-
-const CLIENTS = {
-  [OneCRLBlocklistClient.collectionName]: OneCRLBlocklistClient,
-  [AddonBlocklistClient.collectionName]: AddonBlocklistClient,
-  [GfxBlocklistClient.collectionName]: GfxBlocklistClient,
-  [PluginBlocklistClient.collectionName]: PluginBlocklistClient,
-  [PinningPreloadClient.collectionName]: PinningPreloadClient
-};
+const BlocklistClients = Cu.import(
+  "resource://services-common/blocklist-clients.js",
+  {}
+);
 
 const SERVER_PROD = "https://firefox.settings.services.mozilla.com/v1";
 const SERVER_STAGE = "https://settings.stage.mozaws.net/v1";
@@ -44,9 +26,32 @@ const HASH_PROD =
 const HASH_STAGE =
   "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90";
 
-const COLLECTIONS = ["addons", "onecrl", "plugins", "gfx", "pinning"];
-
 const controller = {
+  clients() {
+    BlocklistClients.initialize(); // Let Gecko instantiate real clients.
+    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
+    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
+    // This will return existing instances (will signer initialized etc.)
+    return [
+      RemoteSettings(Preferences.get("services.blocklist.addons.collection"), {
+        bucketName: blocklistsBucket
+      }),
+      RemoteSettings(Preferences.get("services.blocklist.onecrl.collection"), {
+        bucketName: blocklistsBucket
+      }),
+      RemoteSettings(Preferences.get("services.blocklist.plugins.collection"), {
+        bucketName: blocklistsBucket
+      }),
+      RemoteSettings(Preferences.get("services.blocklist.gfx.collection"), {
+        bucketName: blocklistsBucket
+      }),
+      RemoteSettings(Preferences.get("services.blocklist.pinning.collection"), {
+        bucketName: pinningBucket
+      })
+    ];
+    // TODO: add clients using main bucket (or add a RemoteSettings.inspect() tool)
+  },
+
   /**
    * guessEnvironment() will read the current preferences and return the
    * environment name (suffixed with `preview` if relevant).
@@ -72,16 +77,14 @@ const controller = {
    * an environment to another.
    */
   setEnvironment(env) {
+    const clients = this.clients();
     switch (env) {
       case "prod":
         Preferences.set("services.settings.server", SERVER_PROD);
         Preferences.set("services.blocklist.bucket", "blocklists");
         Preferences.set("services.blocklist.pinning.bucket", "pinning");
         Preferences.set("security.content.signature.root_hash", HASH_PROD);
-        for (const client of Object.values(CLIENTS)) {
-          client.bucketName = "blocklists";
-        }
-        PinningPreloadClient.bucketName = "pinning";
+        BlocklistClients.initialize();
         Preferences.set(
           "extensions.blocklist.url",
           `${SERVER_PROD}/blocklist/${XML_SUFFIX}`
@@ -92,10 +95,7 @@ const controller = {
         Preferences.set("services.blocklist.bucket", "blocklists-preview");
         Preferences.set("services.blocklist.pinning.bucket", "pinning-preview");
         Preferences.set("security.content.signature.root_hash", HASH_PROD);
-        for (const client of Object.values(CLIENTS)) {
-          client.bucketName = "blocklists-preview";
-        }
-        PinningPreloadClient.bucketName = "pinning-preview";
+        BlocklistClients.initialize();
         Preferences.set(
           "extensions.blocklist.url",
           `${SERVER_PROD}/preview/${XML_SUFFIX}`
@@ -106,10 +106,7 @@ const controller = {
         Preferences.set("services.blocklist.bucket", "blocklists");
         Preferences.set("services.blocklist.pinning.bucket", "pinning");
         Preferences.set("security.content.signature.root_hash", HASH_STAGE);
-        for (const client of Object.values(CLIENTS)) {
-          client.bucketName = "blocklists";
-        }
-        PinningPreloadClient.bucketName = "pinning";
+        BlocklistClients.initialize();
         Preferences.set(
           "extensions.blocklist.url",
           `${SERVER_STAGE}/blocklist/${XML_SUFFIX}`
@@ -120,10 +117,7 @@ const controller = {
         Preferences.set("services.blocklist.bucket", "blocklists-preview");
         Preferences.set("services.blocklist.pinning.bucket", "pinning-preview");
         Preferences.set("security.content.signature.root_hash", HASH_STAGE);
-        for (const client of Object.values(CLIENTS)) {
-          client.bucketName = "blocklists-preview";
-        }
-        PinningPreloadClient.bucketName = "pinning-preview";
+        BlocklistClients.initialize();
         Preferences.set(
           "extensions.blocklist.url",
           `${SERVER_STAGE}/preview/${XML_SUFFIX}`
@@ -137,26 +131,22 @@ const controller = {
    */
   async mainPreferences() {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
-    const blocklistsEnabled = Preferences.get(
-      "services.blocklist.update_enabled"
-    );
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
     const pinningEnabled = Preferences.get(
       "services.blocklist.pinning.enabled"
     );
-    const oneCRLviaAmo = Preferences.get("security.onecrl.via.amo");
-    const signing = Preferences.get("services.blocklist.signing.enforced");
+    const verifySignature = Preferences.get(
+      "services.settings.verify_signature"
+    );
     const rootHash = Preferences.get("security.content.signature.root_hash");
-    const loadDump = Preferences.get("services.blocklist.load_dump");
+    const loadDump = Preferences.get("services.settings.load_dump");
     const server = Preferences.get("services.settings.server");
 
     return {
       blocklistsBucket,
-      blocklistsEnabled,
       pinningBucket,
       pinningEnabled,
-      oneCRLviaAmo,
-      signing,
+      verifySignature,
       rootHash,
       loadDump,
       server
@@ -164,41 +154,37 @@ const controller = {
   },
 
   /**
-   * synchronizeRemoteSettings() is the one of the main synchronization actions. It triggers
-   * a Kinto remote settings synchronization, as it would from the XPCOM registry.
-   * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#596
-   */
-  async synchronizeRemoteSettings() {
-    return BlocklistUpdater.checkVersions();
-  },
-
-  /**
    * refreshXml() is the global synchronization action. It triggers everything, from
-   * XML refresh to Kinto remote settings synchronization.
+   * XML refresh to remote settings synchronization.
    * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#483
    */
   async refreshXml() {
     const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(
       Ci.nsITimerCallback
     );
-    blocklist.notify(null);
-    // It's super complicated to get a signal when it's done. Just wait for now.
-    await new Promise(resolve => {
-      setTimeout(resolve, 5000);
+
+    return new Promise(resolve => {
+      const event = "remote-settings-changes-polled";
+      const changesPolledObserver = {
+        observe(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(this, event);
+          resolve();
+        }
+      };
+      Services.obs.addObserver(changesPolledObserver, event);
+      blocklist.notify(null);
     });
   },
 
   /**
-   * forceSync() will trigger a synchronization at the Kinto level only for the specified collection.
+   * forceSync() will trigger a synchronization at the level only for the specified client.
    */
-  async forceSync(collection) {
+  async forceSync(client) {
     const serverTimeMs =
-      parseInt(Preferences.get("services.blocklist.last_update_seconds"), 10) *
+      parseInt(Preferences.get("services.settings.last_update_seconds"), 10) *
       1000;
     const lastModified = Infinity; // Force sync, never up-to-date.
-
-    const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return CLIENTS[id].maybeSync(lastModified, serverTimeMs);
+    return client.maybeSync(lastModified, serverTimeMs);
   },
 
   /**
@@ -206,9 +192,9 @@ const controller = {
    * It will simulate a profile that has never been synchronized.
    */
   async clearPollingStatus() {
-    Preferences.reset("services.blocklist.last_update_seconds");
-    Preferences.reset("services.blocklist.last_etag");
-    Preferences.reset("services.blocklist.clock_skew_seconds");
+    Preferences.reset("services.settings.last_update_seconds");
+    Preferences.reset("services.settings.last_etag");
+    Preferences.reset("services.settings.clock_skew_seconds");
     Preferences.reset("services.settings.server.backoff");
   },
 
@@ -220,12 +206,12 @@ const controller = {
     const prefs = [
       // Preferences
       { target: "server", name: "services.settings.server" },
-      { target: "changespath", name: "services.blocklist.changes.path" },
+      { target: "changespath", name: "services.settings.changes.path" },
       // Status
       { target: "backoff", name: "services.settings.server.backoff" },
-      { target: "lastPoll", name: "services.blocklist.last_update_seconds" },
-      { target: "timestamp", name: "services.blocklist.last_etag" },
-      { target: "clockskew", name: "services.blocklist.clock_skew_seconds" }
+      { target: "lastPoll", name: "services.settings.last_update_seconds" },
+      { target: "timestamp", name: "services.settings.last_etag" },
+      { target: "clockskew", name: "services.settings.clock_skew_seconds" }
     ];
     const result = {};
     for (const pref of prefs) {
@@ -248,56 +234,45 @@ const controller = {
   },
 
   /**
-   * blocklistStatus() returns information about each blocklist collection.
+   * remoteSettingsStatus() returns information about each remote settings collection.
    */
-  async blocklistStatus() {
+  async remoteSettingsStatus() {
     const server = Preferences.get("services.settings.server");
-    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
-    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
-
-    const changespath = Preferences.get("services.blocklist.changes.path");
+    const changespath = Preferences.get("services.settings.changes.path");
     const monitorUrl = `${server}${changespath}`;
-
     const response = await fetch(monitorUrl);
     const { data } = await response.json();
-
-    const timestampsById = data.reduce((acc, entry) => {
+    const timestamps = data.reduce((acc, entry) => {
       const { collection, bucket, last_modified } = entry;
-      const currentBucket =
-        collection == "pinning" ? pinningBucket : blocklistsBucket;
-      if (bucket == currentBucket) {
-        acc[collection] = acc[collection] || last_modified;
+      if (!(bucket in acc)) {
+        acc[bucket] = {};
       }
+      acc[bucket][collection] = last_modified;
       return acc;
     }, {});
 
-    return Promise.all(
-      COLLECTIONS.map(async name => {
-        const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
-        const id = Preferences.get(`services.blocklist.${name}.collection`);
-        const url = `${server}/buckets/${bucket}/collections/${id}/records`;
-        const lastCheckedSeconds = Preferences.get(
-          `services.blocklist.${name}.checked`
-        );
-        const lastChecked = lastCheckedSeconds
-          ? parseInt(lastCheckedSeconds, 10) * 1000
-          : undefined;
-        const timestamp = timestampsById[id];
-
-        const local = await this.fetchLocal(bucket, name);
-        const { localTimestamp, records } = local;
-        return {
-          id,
-          name,
-          bucket,
-          url,
-          lastChecked,
-          timestamp,
-          localTimestamp,
-          records
-        };
-      })
-    );
+    const results = [];
+    for (const client of this.clients()) {
+      const url = `${server}/buckets/${client.bucketName}/collections/${
+        client.collectionName
+      }/records`;
+      const lastCheckedSeconds = Preferences.get(client.lastCheckTimePref);
+      const lastChecked = lastCheckedSeconds
+        ? parseInt(lastCheckedSeconds, 10) * 1000
+        : undefined;
+      const remoteTimestamp =
+        timestamps[client.bucketName][client.collectionName];
+      const { localTimestamp, records } = await this.fetchLocal(client);
+      results.push({
+        client,
+        url,
+        lastChecked,
+        remoteTimestamp,
+        localTimestamp,
+        records
+      });
+    }
+    return results;
   },
 
   /**
@@ -373,58 +348,32 @@ const controller = {
     };
   },
 
-  async _localDb(bucket, collection, callback) {
-    const server = "http://unused/v1";
-    const path = "kinto.sqlite";
-    const config = { remote: server, adapter: FirefoxAdapter, bucket };
-
-    const sqliteHandle = await FirefoxAdapter.openConnection({ path });
-    const options = Object.assign({}, config, {
-      adapterOptions: { sqliteHandle }
-    });
-    const localCollection = new Kinto(options).collection(collection);
-
-    const result = await callback(localCollection);
-    await sqliteHandle.close();
-    return result;
+  /**
+   * fetchLocal() returns the records from the local database for the specified client.
+   */
+  async fetchLocal(client) {
+    const records = await client.get();
+    const kintoCol = await client.openCollection();
+    const localTimestamp = await kintoCol.db.getLastModified();
+    return { localTimestamp, records };
   },
 
   /**
-   * fetchLocal() returns the records from the local database for the specified bucket/collection.
+   * deleteLocal() deletes the local records of the specified client.
    */
-  async fetchLocal(bucket, collection) {
-    const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return this._localDb(bucket, id, async localCollection => {
-      const timestamp = await localCollection.db.getLastModified();
-      const { data: records } = await localCollection.list();
-      return { localTimestamp: timestamp, records };
-    });
-  },
-
-  /**
-   * deleteLocal() deletes the local records of the specified bucket/collection.
-   */
-  async deleteLocal(bucket, collection) {
-    Preferences.reset(`services.blocklist.${collection}.checked`);
-    const id = Preferences.get(`services.blocklist.${collection}.collection`);
-    return this._localDb(bucket, id, async localCollection => {
-      await localCollection.clear();
-    });
+  async deleteLocal(client) {
+    Preferences.reset(client.lastCheckTimePref);
+    const kintoCol = await client.openCollection();
+    return kintoCol.clear();
   },
 
   /**
    * deleteAllLocal() deletes the local records of every collection.
    */
   async deleteAllLocal() {
-    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
-    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
-    // Execute delete sequentially.
-    await Promise.all(
-      COLLECTIONS.map(async name => {
-        const bucket = name == "pinning" ? pinningBucket : blocklistsBucket;
-        await controller.deleteLocal(bucket, name);
-      })
-    );
+    for (const client of this.clients()) {
+      await this.deleteLocal(client);
+    }
   }
 };
 
@@ -464,8 +413,9 @@ async function main() {
 
   // Poll for changes button.
   document.getElementById("run-poll").onclick = async () => {
+    showGlobalError("");
     try {
-      await controller.synchronizeRemoteSettings();
+      await RemoteSettings.pollChanges();
     } catch (e) {
       showGlobalError(e);
     }
@@ -481,6 +431,7 @@ async function main() {
 
   // Clear all data.
   document.getElementById("clear-all-data").onclick = async () => {
+    showGlobalError("");
     try {
       await controller.clearPollingStatus();
       await controller.deleteAllLocal();
@@ -499,6 +450,7 @@ function asDate(timestamp) {
 }
 
 function showGlobalError(error) {
+  console.error(error);
   document.getElementById("polling-error").textContent = error;
 }
 
@@ -506,11 +458,9 @@ async function showPreferences() {
   const result = await controller.mainPreferences();
   const {
     blocklistsBucket,
-    blocklistsEnabled,
     pinningBucket,
     pinningEnabled,
-    oneCRLviaAmo,
-    signing,
+    verifySignature,
     rootHash,
     loadDump,
     server
@@ -519,11 +469,9 @@ async function showPreferences() {
   document.getElementById("server").textContent = server;
   document.getElementById("server").setAttribute("href", server);
   document.getElementById("blocklists-bucket").textContent = blocklistsBucket;
-  document.getElementById("blocklists-enabled").textContent = blocklistsEnabled;
   document.getElementById("pinning-bucket").textContent = pinningBucket;
-  document.getElementById("pinning-enabled").textContent = blocklistsEnabled;
-  document.getElementById("onecrl-amo").textContent = oneCRLviaAmo;
-  document.getElementById("signing").textContent = signing;
+  document.getElementById("pinning-enabled").textContent = pinningEnabled;
+  document.getElementById("verify-signature").textContent = verifySignature;
   document.getElementById("load-dump").textContent = loadDump;
   document.getElementById("root-hash").textContent = rootHash;
 }
@@ -565,29 +513,33 @@ async function showPollingStatus() {
 async function showBlocklistStatus() {
   const tpl = document.getElementById("collection-status-tpl");
   const statusList = document.getElementById("blocklists-status");
-  const collections = await controller.blocklistStatus();
+  const infos = await controller.remoteSettingsStatus();
 
   statusList.innerHTML = "";
 
-  collections.forEach(collection => {
+  infos.forEach(info => {
     const {
-      bucket,
-      id,
-      name,
+      client,
       url,
       lastChecked,
       records,
       localTimestamp,
-      timestamp
-    } = collection;
+      remoteTimestamp
+    } = info;
 
     const infos = tpl.content.cloneNode(true);
-    infos.querySelector("div").setAttribute("id", `status-${id}`);
+    infos
+      .querySelector("div")
+      .setAttribute("id", `status-${client.identifier}`);
     infos.querySelector(".blocklist").textContent = name;
-    infos.querySelector(".url a").textContent = `${bucket}/${id}`;
+    infos.querySelector(".url a").textContent = `${client.bucketName}/${
+      client.collectionName
+    }`;
     infos.querySelector(".url a").setAttribute("href", url);
-    infos.querySelector(".human-timestamp").textContent = asDate(timestamp);
-    infos.querySelector(".timestamp").textContent = timestamp;
+    infos.querySelector(".human-timestamp").textContent = asDate(
+      remoteTimestamp
+    );
+    infos.querySelector(".timestamp").textContent = remoteTimestamp;
     infos.querySelector(".human-local-timestamp").textContent = asDate(
       localTimestamp
     );
@@ -596,20 +548,22 @@ async function showBlocklistStatus() {
     infos.querySelector(".last-check").textContent = asDate(lastChecked);
 
     infos.querySelector(".clear-data").onclick = async () => {
-      await controller.deleteLocal(bucket, name);
+      await controller.deleteLocal(client);
       await showBlocklistStatus();
     };
     infos.querySelector(".sync").onclick = async () => {
       let error = "";
       try {
-        await controller.forceSync(name);
+        await controller.forceSync(client);
       } catch (e) {
         error = e;
       }
       await showBlocklistStatus();
       if (error) {
-        console.log(error);
-        document.querySelector(`#status-${id} .error`).textContent = error;
+        console.error(error);
+        document.querySelector(
+          `#status-${client.identifier} .error`
+        ).textContent = error;
       }
     };
     statusList.appendChild(infos);
