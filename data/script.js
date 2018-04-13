@@ -1,7 +1,6 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
 const { RemoteSettings } = Cu.import("resource://services-common/remote-settings.js", {});
 const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
 const { UpdateUtils } = Cu.import("resource://gre/modules/UpdateUtils.jsm");
@@ -20,23 +19,23 @@ const HASH_STAGE =
 const controller = {
   clients() {
     BlocklistClients.initialize(); // Let Gecko instantiate real clients.
-    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
-    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
+    const blocklistsBucket = Services.prefs.getCharPref("services.blocklist.bucket");
+    const pinningBucket = Services.prefs.getCharPref("services.blocklist.pinning.bucket");
     // This will return existing instances (will signer initialized etc.)
     return [
-      RemoteSettings(Preferences.get("services.blocklist.addons.collection"), {
+      RemoteSettings(Services.prefs.getCharPref("services.blocklist.addons.collection"), {
         bucketName: blocklistsBucket
       }),
-      RemoteSettings(Preferences.get("services.blocklist.onecrl.collection"), {
+      RemoteSettings(Services.prefs.getCharPref("services.blocklist.onecrl.collection"), {
         bucketName: blocklistsBucket
       }),
-      RemoteSettings(Preferences.get("services.blocklist.plugins.collection"), {
+      RemoteSettings(Services.prefs.getCharPref("services.blocklist.plugins.collection"), {
         bucketName: blocklistsBucket
       }),
-      RemoteSettings(Preferences.get("services.blocklist.gfx.collection"), {
+      RemoteSettings(Services.prefs.getCharPref("services.blocklist.gfx.collection"), {
         bucketName: blocklistsBucket
       }),
-      RemoteSettings(Preferences.get("services.blocklist.pinning.collection"), {
+      RemoteSettings(Services.prefs.getCharPref("services.blocklist.pinning.collection"), {
         bucketName: pinningBucket
       })
     ];
@@ -49,15 +48,14 @@ const controller = {
    * environment name (suffixed with `preview` if relevant).
    */
   guessEnvironment() {
-    const server = Preferences.get("services.settings.server");
+    const server = Services.prefs.getCharPref("services.settings.server");
     let environment = "custom";
     if (server == SERVER_PROD) {
       environment = "prod";
     } else if (server == SERVER_STAGE) {
       environment = "stage";
     }
-    const aClient = this.clients()[0];
-    if (aClient.bucketName.includes("-preview")) {
+    if (this.clients().every(c => c.bucketName.includes("-preview"))) {
       environment += "-preview";
     }
     return environment;
@@ -71,17 +69,17 @@ const controller = {
     const clients = this.clients();
     switch (env) {
       case "prod":
-        Preferences.set("services.settings.server", SERVER_PROD);
-        Preferences.set("security.content.signature.root_hash", HASH_PROD);
-        Preferences.set("extensions.blocklist.url", `${SERVER_PROD}/blocklist/${XML_SUFFIX}`);
+        Services.prefs.setCharPref("services.settings.server", SERVER_PROD);
+        Services.prefs.setCharPref("security.content.signature.root_hash", HASH_PROD);
+        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_PROD}/blocklist/${XML_SUFFIX}`);
         for (const client of clients) {
           client.bucketName = client.bucketName.replace("-preview", "");
         }
         break;
       case "prod-preview":
-        Preferences.set("services.settings.server", SERVER_PROD);
-        Preferences.set("security.content.signature.root_hash", HASH_PROD);
-        Preferences.set("extensions.blocklist.url", `${SERVER_PROD}/preview/${XML_SUFFIX}`);
+        Services.prefs.setCharPref("services.settings.server", SERVER_PROD);
+        Services.prefs.setCharPref("security.content.signature.root_hash", HASH_PROD);
+        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_PROD}/preview/${XML_SUFFIX}`);
         for (const client of clients) {
           if (!client.bucketName.includes("-preview")) {
             client.bucketName += "-preview";
@@ -89,17 +87,17 @@ const controller = {
         }
         break;
       case "stage":
-        Preferences.set("services.settings.server", SERVER_STAGE);
-        Preferences.set("security.content.signature.root_hash", HASH_STAGE);
-        Preferences.set("extensions.blocklist.url", `${SERVER_STAGE}/blocklist/${XML_SUFFIX}`);
+        Services.prefs.setCharPref("services.settings.server", SERVER_STAGE);
+        Services.prefs.setCharPref("security.content.signature.root_hash", HASH_STAGE);
+        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_STAGE}/blocklist/${XML_SUFFIX}`);
         for (const client of clients) {
           client.bucketName = client.bucketName.replace("-preview", "");
         }
         break;
       case "stage-preview":
-        Preferences.set("services.settings.server", SERVER_STAGE);
-        Preferences.set("security.content.signature.root_hash", HASH_STAGE);
-        Preferences.set("extensions.blocklist.url", `${SERVER_STAGE}/preview/${XML_SUFFIX}`);
+        Services.prefs.setCharPref("services.settings.server", SERVER_STAGE);
+        Services.prefs.setCharPref("security.content.signature.root_hash", HASH_STAGE);
+        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_STAGE}/preview/${XML_SUFFIX}`);
         for (const client of clients) {
           if (!client.bucketName.includes("-preview")) {
             client.bucketName += "-preview";
@@ -113,14 +111,13 @@ const controller = {
    * mainPreferences() returns the values of the internal preferences related to remote settings.
    */
   async mainPreferences() {
-    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
-    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
-    const pinningEnabled = Preferences.get("services.blocklist.pinning.enabled");
-    const verifySignature = Preferences.get("services.settings.verify_signature");
-    const rootHash = Preferences.get("security.content.signature.root_hash");
-    const loadDump = Preferences.get("services.settings.load_dump");
-    const server = Preferences.get("services.settings.server");
-
+    const blocklistsBucket = Services.prefs.getCharPref("services.blocklist.bucket");
+    const pinningBucket = Services.prefs.getCharPref("services.blocklist.pinning.bucket");
+    const pinningEnabled = Services.prefs.getBoolPref("services.blocklist.pinning.enabled");
+    const verifySignature = Services.prefs.getBoolPref("services.settings.verify_signature", true);
+    const rootHash = Services.prefs.getCharPref("security.content.signature.root_hash");
+    const loadDump = Services.prefs.getBoolPref("services.settings.load_dump", true);
+    const server = Services.prefs.getCharPref("services.settings.server");
     return {
       blocklistsBucket,
       pinningBucket,
@@ -157,8 +154,7 @@ const controller = {
    * forceSync() will trigger a synchronization at the level only for the specified client.
    */
   async forceSync(client) {
-    const serverTimeMs =
-      parseInt(Preferences.get("services.settings.last_update_seconds"), 10) * 1000;
+    const serverTimeMs = Services.prefs.getIntPref("services.settings.last_update_seconds") * 1000;
     const lastModified = Infinity; // Force sync, never up-to-date.
     return client.maybeSync(lastModified, serverTimeMs);
   },
@@ -168,10 +164,10 @@ const controller = {
    * It will simulate a profile that has never been synchronized.
    */
   async clearPollingStatus() {
-    Preferences.reset("services.settings.last_update_seconds");
-    Preferences.reset("services.settings.last_etag");
-    Preferences.reset("services.settings.clock_skew_seconds");
-    Preferences.reset("services.settings.server.backoff");
+    Services.prefs.clearUserPref("services.settings.last_update_seconds");
+    Services.prefs.clearUserPref("services.settings.last_etag");
+    Services.prefs.clearUserPref("services.settings.clock_skew_seconds");
+    Services.prefs.clearUserPref("services.settings.server.backoff");
   },
 
   /**
@@ -179,40 +175,26 @@ const controller = {
    * global polling status.
    */
   async pollingStatus() {
-    const prefs = [
+    const etag = Services.prefs.getCharPref("services.settings.last_etag", '""');
+    const timestamp = parseInt(etag.replace('"', 0), 10);
+    return {
       // Preferences
-      { target: "server", name: "services.settings.server" },
-      { target: "changespath", name: "services.settings.changes.path" },
+      server: Services.prefs.getCharPref("services.settings.server"),
+      changespath: Services.prefs.getCharPref("services.settings.changes.path"),
       // Status
-      { target: "backoff", name: "services.settings.server.backoff" },
-      { target: "lastPoll", name: "services.settings.last_update_seconds" },
-      { target: "timestamp", name: "services.settings.last_etag" },
-      { target: "clockskew", name: "services.settings.clock_skew_seconds" }
-    ];
-    const result = {};
-    for (const pref of prefs) {
-      const { target, name } = pref;
-      const value = Preferences.get(name);
-      switch (target) {
-        case "lastPoll":
-          result[target] = value ? parseInt(value, 10) * 1000 : undefined;
-          break;
-        case "timestamp":
-          result[target] = value ? parseInt(value.replace('"', ""), 10) : undefined;
-          break;
-        default:
-          result[target] = value;
-      }
-    }
-    return result;
+      backoff: Services.prefs.getCharPref("services.settings.server.backoff", undefined),
+      lastPoll: Services.prefs.getIntPref("services.settings.last_update_seconds", 0) * 1000,
+      timestamp,
+      clockskew: Services.prefs.getIntPref("services.settings.clock_skew_seconds", undefined),
+    };
   },
 
   /**
    * remoteSettingsStatus() returns information about each remote settings collection.
    */
   async remoteSettingsStatus() {
-    const server = Preferences.get("services.settings.server");
-    const changespath = Preferences.get("services.settings.changes.path");
+    const server = Services.prefs.getCharPref("services.settings.server");
+    const changespath = Services.prefs.getCharPref("services.settings.changes.path");
     const monitorUrl = `${server}${changespath}`;
     const response = await fetch(monitorUrl);
     const { data } = await response.json();
@@ -229,8 +211,8 @@ const controller = {
     for (const client of this.clients()) {
       const { bucketName: bid, collectionName: cid } = client;
       const url = `${server}/buckets/${bid}/collections/${bid}/records`;
-      const lastCheckedSeconds = Preferences.get(client.lastCheckTimePref);
-      const lastChecked = lastCheckedSeconds ? parseInt(lastCheckedSeconds, 10) * 1000 : undefined;
+      const lastCheckedSeconds = Services.prefs.getIntPref(client.lastCheckTimePref, undefined);
+      const lastChecked = lastCheckedSeconds ? lastCheckedSeconds * 1000 : undefined;
       const remoteTimestamp = timestamps[bid][cid];
       const { localTimestamp, records } = await this.fetchLocal(client);
       results.push({
@@ -249,17 +231,14 @@ const controller = {
    * xmlStatus() returns information about the legacy XML blocklist file.
    */
   async xmlStatus() {
-    const urlTemplate = Preferences.get("extensions.blocklist.url");
-    const interval = Preferences.get("extensions.blocklist.interval");
-    const pingCount = Preferences.get("extensions.blocklist.pingCountVersion");
-    const pingTotal = Preferences.get("extensions.blocklist.pingCountTotal");
-    const updateEpoch = parseInt(
-      Preferences.get("app.update.lastUpdateTime.blocklist-background-update-timer"),
-      10
-    );
+    const urlTemplate = Services.prefs.getCharPref("extensions.blocklist.url");
+    const interval = Services.prefs.getCharPref("extensions.blocklist.interval");
+    const pingCount = Services.prefs.getCharPref("extensions.blocklist.pingCountVersion");
+    const pingTotal = Services.prefs.getCharPref("extensions.blocklist.pingCountTotal");
+    const updateEpoch = Services.prefs.getIntPref("app.update.lastUpdateTime.blocklist-background-update-timer");
 
-    const distribution = Preferences.get("distribution.id") || "default";
-    const distributionVersion = Preferences.get("distribution.version") || "default";
+    const distribution = Services.prefs.getCharPref("distribution.id") || "default";
+    const distributionVersion = Services.prefs.getCharPref("distribution.version") || "default";
 
     const lastUpdate = new Date(updateEpoch * 1000.0);
     const ageDays = Math.floor((Date.now() - lastUpdate) / (1000 * 60 * 60 * 24));
@@ -275,7 +254,7 @@ const controller = {
     } catch (e) {}
 
     // Locale
-    const locale = Preferences.get("general.useragent.locale") || "fr-FR";
+    const locale = Services.prefs.getCharPref("general.useragent.locale") || "fr-FR";
 
     // Application information
     const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
@@ -322,7 +301,7 @@ const controller = {
    * deleteLocal() deletes the local records of the specified client.
    */
   async deleteLocal(client) {
-    Preferences.reset(client.lastCheckTimePref);
+    Services.prefs.clearUserPref(client.lastCheckTimePref);
     const kintoCol = await client.openCollection();
     return kintoCol.clear();
   },
@@ -472,7 +451,7 @@ async function showBlocklistStatus() {
 
     const infos = tpl.content.cloneNode(true);
     infos.querySelector("div").setAttribute("id", `status-${client.identifier}`);
-    infos.querySelector(".blocklist").textContent = name;
+    infos.querySelector(".blocklist").textContent = client.identifier;
     infos.querySelector(".url a").textContent = `${client.identifier}`;
     infos.querySelector(".url a").setAttribute("href", url);
     infos.querySelector(".human-timestamp").textContent = asDate(remoteTimestamp);
