@@ -9,8 +9,6 @@ const BlocklistClients = Cu.import("resource://services-common/blocklist-clients
 
 const SERVER_PROD = "https://firefox.settings.services.mozilla.com/v1";
 const SERVER_STAGE = "https://settings.stage.mozaws.net/v1";
-const XML_SUFFIX =
-  "3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/%TOTAL_PING_COUNT%/%DAYS_SINCE_LAST_PING%/";
 const HASH_PROD =
   "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E";
 const HASH_STAGE =
@@ -73,7 +71,6 @@ const controller = {
         Services.prefs.setCharPref("services.blocklist.bucket", "blocklists");
         Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_PROD);
-        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_PROD}/blocklist/${XML_SUFFIX}`);
         for (const client of clients) {
           client.bucketName = client.bucketName.replace("-preview", "");
         }
@@ -83,7 +80,6 @@ const controller = {
         Services.prefs.setCharPref("services.blocklist.bucket", "blocklists-preview");
         Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning-preview");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_PROD);
-        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_PROD}/preview/${XML_SUFFIX}`);
         for (const client of clients) {
           if (!client.bucketName.includes("-preview")) {
             client.bucketName += "-preview";
@@ -95,7 +91,6 @@ const controller = {
         Services.prefs.setCharPref("services.blocklist.bucket", "blocklists");
         Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_STAGE);
-        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_STAGE}/blocklist/${XML_SUFFIX}`);
         for (const client of clients) {
           client.bucketName = client.bucketName.replace("-preview", "");
         }
@@ -105,7 +100,6 @@ const controller = {
         Services.prefs.setCharPref("services.blocklist.bucket", "blocklists-preview");
         Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning-preview");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_STAGE);
-        Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_STAGE}/preview/${XML_SUFFIX}`);
         for (const client of clients) {
           if (!client.bucketName.includes("-preview")) {
             client.bucketName += "-preview";
@@ -135,27 +129,6 @@ const controller = {
       loadDump,
       server
     };
-  },
-
-  /**
-   * refreshXml() is the global synchronization action. It triggers everything, from
-   * XML refresh to remote settings synchronization.
-   * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#483
-   */
-  async refreshXml() {
-    const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
-
-    return new Promise(resolve => {
-      const event = "remote-settings-changes-polled";
-      const changesPolledObserver = {
-        observe(aSubject, aTopic, aData) {
-          Services.obs.removeObserver(this, event);
-          resolve();
-        }
-      };
-      Services.obs.addObserver(changesPolledObserver, event);
-      blocklist.notify(null);
-    });
   },
 
   /**
@@ -236,66 +209,6 @@ const controller = {
   },
 
   /**
-   * xmlStatus() returns information about the legacy XML blocklist file.
-   */
-  async xmlStatus() {
-    const urlTemplate = Services.prefs.getCharPref("extensions.blocklist.url");
-    const interval = Services.prefs.getCharPref("extensions.blocklist.interval");
-    const pingCount = Services.prefs.getCharPref("extensions.blocklist.pingCountVersion");
-    const pingTotal = Services.prefs.getCharPref("extensions.blocklist.pingCountTotal");
-    const updateEpoch = Services.prefs.getIntPref("app.update.lastUpdateTime.blocklist-background-update-timer");
-
-    const distribution = Services.prefs.getCharPref("distribution.id") || "default";
-    const distributionVersion = Services.prefs.getCharPref("distribution.version") || "default";
-
-    const lastUpdate = new Date(updateEpoch * 1000.0);
-    const ageDays = Math.floor((Date.now() - lastUpdate) / (1000 * 60 * 60 * 24));
-
-    // System information
-    const sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-    let osVersion = "unknown";
-    try {
-      osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
-    } catch (e) {}
-    try {
-      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
-    } catch (e) {}
-
-    // Locale
-    const locale = Services.prefs.getCharPref("general.useragent.locale") || "fr-FR";
-
-    // Application information
-    const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    const app = appinfo.QueryInterface(Ci.nsIXULAppInfo);
-
-    // Build URL
-    const url = urlTemplate
-      .replace("%APP_ID%", app.ID)
-      .replace("%PRODUCT%", app.name)
-      .replace("%BUILD_ID%", app.appBuildID)
-      .replace("%APP_VERSION%", app.version)
-      .replace("%VERSION%", app.version)
-      .replace("%BUILD_TARGET%", app.OS + "_" + app.XPCOMABI)
-      .replace("%PLATFORM_VERSION%", app.platformVersion)
-      .replace("%PING_COUNT%", ageDays == 0 ? "invalid" : pingCount)
-      .replace("%TOTAL_PING_COUNT%", ageDays == 0 ? "invalid" : pingTotal)
-      .replace("%DAYS_SINCE_LAST_PING%", ageDays)
-      .replace("%LOCALE%", locale)
-      .replace("%CHANNEL%", UpdateUtils.UpdateChannel)
-      .replace("%OS_VERSION%", encodeURIComponent(osVersion))
-      .replace("%DISTRIBUTION%", distribution)
-      .replace("%DISTRIBUTION_VERSION%", distributionVersion);
-    return {
-      url,
-      interval,
-      pingCount,
-      pingTotal,
-      lastUpdate,
-      ageDays
-    };
-  },
-
-  /**
    * fetchLocal() returns the records from the local database for the specified client.
    */
   async fetchLocal(client) {
@@ -326,7 +239,7 @@ const controller = {
 
 async function main() {
   // Populate UI in the background (ie. don't await)
-  Promise.all([showPreferences(), showPollingStatus(), showBlocklistStatus(), showXmlStatus()]);
+  Promise.all([showPreferences(), showPollingStatus(), showBlocklistStatus()]);
 
   // Install a wrapper around uptake Telemetry to catch events.
   const original = UptakeTelemetry.report;
@@ -342,15 +255,6 @@ async function main() {
   comboEnv.onchange = async event => {
     controller.setEnvironment(event.target.value);
     await showPreferences();
-    await showXmlStatus();
-  };
-
-  // XML refresh button.
-  document.getElementById("xml-refresh").onclick = async () => {
-    await controller.refreshXml();
-    await showXmlStatus();
-    await showPollingStatus();
-    await showBlocklistStatus();
   };
 
   // Poll for changes button.
@@ -418,19 +322,6 @@ async function showPreferences() {
   document.getElementById("verify-signature").textContent = verifySignature;
   document.getElementById("load-dump").textContent = loadDump;
   document.getElementById("root-hash").textContent = rootHash;
-}
-
-async function showXmlStatus() {
-  const result = await controller.xmlStatus();
-  const { url, interval, pingCount, pingTotal, lastUpdate, ageDays } = result;
-
-  document.getElementById("xml-url").textContent = url;
-  document.getElementById("xml-url").setAttribute("href", url);
-  document.getElementById("xml-interval").textContent = interval;
-  document.getElementById("xml-pingcount").textContent = pingCount;
-  document.getElementById("xml-pingtotal").textContent = pingTotal;
-  document.getElementById("xml-lastupdate").textContent = lastUpdate;
-  document.getElementById("xml-agedays").textContent = ageDays;
 }
 
 async function showPollingStatus() {

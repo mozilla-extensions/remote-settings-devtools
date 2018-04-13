@@ -14,17 +14,16 @@ body {
   display: grid;
   grid-template-areas:
       "title      actionbox  actionbox   telemetry"
-      "settings   xml        polling     telemetry"
-      "status     status     status      telemetry"
-      "status     status     status      telemetry";
-  grid-template-columns: repeat(3, 1fr) max-content;
+      "polling    status     status      telemetry"
+      "settings   status     status      telemetry"
+      "settings   status     status      telemetry";
+  grid-template-columns: 1fr 2fr 2fr max-content;
   grid-gap: 10px;
 }
 
 h1 { grid-area: title }
 #action-box { grid-area: actionbox }
 #blocklists-settings { grid-area: settings }
-#blocklists-xml { grid-area: xml }
 #blocklists-polling { grid-area: polling }
 #blocklists-status { grid-area: status }
 #telemetry-events { grid-area: telemetry }
