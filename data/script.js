@@ -2,20 +2,11 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
-const { RemoteSettings } = Cu.import(
-  "resource://services-common/remote-settings.js",
-  {}
-);
-const { UptakeTelemetry } = Cu.import(
-  "resource://services-common/uptake-telemetry.js",
-  {}
-);
+const { RemoteSettings } = Cu.import("resource://services-common/remote-settings.js", {});
+const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
 const { UpdateUtils } = Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
-const BlocklistClients = Cu.import(
-  "resource://services-common/blocklist-clients.js",
-  {}
-);
+const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 const SERVER_PROD = "https://firefox.settings.services.mozilla.com/v1";
 const SERVER_STAGE = "https://settings.stage.mozaws.net/v1";
@@ -49,7 +40,8 @@ const controller = {
         bucketName: pinningBucket
       })
     ];
-    // TODO: add clients using main bucket (or add a RemoteSettings.inspect() tool)
+    // TODO: add clients using main bucket (or add a RemoteSettings.inspect())
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1453692
   },
 
   /**
@@ -58,15 +50,14 @@ const controller = {
    */
   guessEnvironment() {
     const server = Preferences.get("services.settings.server");
-    const blocklistsBucket = Preferences.get("services.blocklist.bucket");
-    const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
     let environment = "custom";
     if (server == SERVER_PROD) {
       environment = "prod";
     } else if (server == SERVER_STAGE) {
       environment = "stage";
     }
-    if (/-preview$/.test(blocklistsBucket) && /-preview$/.test(pinningBucket)) {
+    const aClient = this.clients()[0];
+    if (aClient.bucketName.includes("-preview")) {
       environment += "-preview";
     }
     return environment;
@@ -81,47 +72,39 @@ const controller = {
     switch (env) {
       case "prod":
         Preferences.set("services.settings.server", SERVER_PROD);
-        Preferences.set("services.blocklist.bucket", "blocklists");
-        Preferences.set("services.blocklist.pinning.bucket", "pinning");
         Preferences.set("security.content.signature.root_hash", HASH_PROD);
-        BlocklistClients.initialize();
-        Preferences.set(
-          "extensions.blocklist.url",
-          `${SERVER_PROD}/blocklist/${XML_SUFFIX}`
-        );
+        Preferences.set("extensions.blocklist.url", `${SERVER_PROD}/blocklist/${XML_SUFFIX}`);
+        for (const client of clients) {
+          client.bucketName = client.bucketName.replace("-preview", "");
+        }
         break;
       case "prod-preview":
         Preferences.set("services.settings.server", SERVER_PROD);
-        Preferences.set("services.blocklist.bucket", "blocklists-preview");
-        Preferences.set("services.blocklist.pinning.bucket", "pinning-preview");
         Preferences.set("security.content.signature.root_hash", HASH_PROD);
-        BlocklistClients.initialize();
-        Preferences.set(
-          "extensions.blocklist.url",
-          `${SERVER_PROD}/preview/${XML_SUFFIX}`
-        );
+        Preferences.set("extensions.blocklist.url", `${SERVER_PROD}/preview/${XML_SUFFIX}`);
+        for (const client of clients) {
+          if (!client.bucketName.includes("-preview")) {
+            client.bucketName += "-preview";
+          }
+        }
         break;
       case "stage":
         Preferences.set("services.settings.server", SERVER_STAGE);
-        Preferences.set("services.blocklist.bucket", "blocklists");
-        Preferences.set("services.blocklist.pinning.bucket", "pinning");
         Preferences.set("security.content.signature.root_hash", HASH_STAGE);
-        BlocklistClients.initialize();
-        Preferences.set(
-          "extensions.blocklist.url",
-          `${SERVER_STAGE}/blocklist/${XML_SUFFIX}`
-        );
+        Preferences.set("extensions.blocklist.url", `${SERVER_STAGE}/blocklist/${XML_SUFFIX}`);
+        for (const client of clients) {
+          client.bucketName = client.bucketName.replace("-preview", "");
+        }
         break;
       case "stage-preview":
         Preferences.set("services.settings.server", SERVER_STAGE);
-        Preferences.set("services.blocklist.bucket", "blocklists-preview");
-        Preferences.set("services.blocklist.pinning.bucket", "pinning-preview");
         Preferences.set("security.content.signature.root_hash", HASH_STAGE);
-        BlocklistClients.initialize();
-        Preferences.set(
-          "extensions.blocklist.url",
-          `${SERVER_STAGE}/preview/${XML_SUFFIX}`
-        );
+        Preferences.set("extensions.blocklist.url", `${SERVER_STAGE}/preview/${XML_SUFFIX}`);
+        for (const client of clients) {
+          if (!client.bucketName.includes("-preview")) {
+            client.bucketName += "-preview";
+          }
+        }
         break;
     }
   },
@@ -132,12 +115,8 @@ const controller = {
   async mainPreferences() {
     const blocklistsBucket = Preferences.get("services.blocklist.bucket");
     const pinningBucket = Preferences.get("services.blocklist.pinning.bucket");
-    const pinningEnabled = Preferences.get(
-      "services.blocklist.pinning.enabled"
-    );
-    const verifySignature = Preferences.get(
-      "services.settings.verify_signature"
-    );
+    const pinningEnabled = Preferences.get("services.blocklist.pinning.enabled");
+    const verifySignature = Preferences.get("services.settings.verify_signature");
     const rootHash = Preferences.get("security.content.signature.root_hash");
     const loadDump = Preferences.get("services.settings.load_dump");
     const server = Preferences.get("services.settings.server");
@@ -159,9 +138,7 @@ const controller = {
    * https://searchfox.org/mozilla-central/rev/137f1b2f434346a0c3756ebfcbdbee4069e15dc8/toolkit/mozapps/extensions/nsBlocklistService.js#483
    */
   async refreshXml() {
-    const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(
-      Ci.nsITimerCallback
-    );
+    const blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
 
     return new Promise(resolve => {
       const event = "remote-settings-changes-polled";
@@ -181,8 +158,7 @@ const controller = {
    */
   async forceSync(client) {
     const serverTimeMs =
-      parseInt(Preferences.get("services.settings.last_update_seconds"), 10) *
-      1000;
+      parseInt(Preferences.get("services.settings.last_update_seconds"), 10) * 1000;
     const lastModified = Infinity; // Force sync, never up-to-date.
     return client.maybeSync(lastModified, serverTimeMs);
   },
@@ -222,9 +198,7 @@ const controller = {
           result[target] = value ? parseInt(value, 10) * 1000 : undefined;
           break;
         case "timestamp":
-          result[target] = value
-            ? parseInt(value.replace('"', ""), 10)
-            : undefined;
+          result[target] = value ? parseInt(value.replace('"', ""), 10) : undefined;
           break;
         default:
           result[target] = value;
@@ -253,15 +227,11 @@ const controller = {
 
     const results = [];
     for (const client of this.clients()) {
-      const url = `${server}/buckets/${client.bucketName}/collections/${
-        client.collectionName
-      }/records`;
+      const { bucketName: bid, collectionName: cid } = client;
+      const url = `${server}/buckets/${bid}/collections/${bid}/records`;
       const lastCheckedSeconds = Preferences.get(client.lastCheckTimePref);
-      const lastChecked = lastCheckedSeconds
-        ? parseInt(lastCheckedSeconds, 10) * 1000
-        : undefined;
-      const remoteTimestamp =
-        timestamps[client.bucketName][client.collectionName];
+      const lastChecked = lastCheckedSeconds ? parseInt(lastCheckedSeconds, 10) * 1000 : undefined;
+      const remoteTimestamp = timestamps[bid][cid];
       const { localTimestamp, records } = await this.fetchLocal(client);
       results.push({
         client,
@@ -269,7 +239,7 @@ const controller = {
         lastChecked,
         remoteTimestamp,
         localTimestamp,
-        records
+        nbRecords: records.length
       });
     }
     return results;
@@ -284,29 +254,21 @@ const controller = {
     const pingCount = Preferences.get("extensions.blocklist.pingCountVersion");
     const pingTotal = Preferences.get("extensions.blocklist.pingCountTotal");
     const updateEpoch = parseInt(
-      Preferences.get(
-        "app.update.lastUpdateTime.blocklist-background-update-timer"
-      ),
+      Preferences.get("app.update.lastUpdateTime.blocklist-background-update-timer"),
       10
     );
 
     const distribution = Preferences.get("distribution.id") || "default";
-    const distributionVersion =
-      Preferences.get("distribution.version") || "default";
+    const distributionVersion = Preferences.get("distribution.version") || "default";
 
     const lastUpdate = new Date(updateEpoch * 1000.0);
-    const ageDays = Math.floor(
-      (Date.now() - lastUpdate) / (1000 * 60 * 60 * 24)
-    );
+    const ageDays = Math.floor((Date.now() - lastUpdate) / (1000 * 60 * 60 * 24));
 
     // System information
-    const sysInfo = Cc["@mozilla.org/system-info;1"].getService(
-      Ci.nsIPropertyBag2
-    );
+    const sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
     let osVersion = "unknown";
     try {
-      osVersion =
-        sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
+      osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
     } catch (e) {}
     try {
       osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
@@ -316,9 +278,7 @@ const controller = {
     const locale = Preferences.get("general.useragent.locale") || "fr-FR";
 
     // Application information
-    const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(
-      Ci.nsIXULRuntime
-    );
+    const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     const app = appinfo.QueryInterface(Ci.nsIXULAppInfo);
 
     // Build URL
@@ -379,12 +339,7 @@ const controller = {
 
 async function main() {
   // Populate UI in the background (ie. don't await)
-  Promise.all([
-    showPreferences(),
-    showPollingStatus(),
-    showBlocklistStatus(),
-    showXmlStatus()
-  ]);
+  Promise.all([showPreferences(), showPollingStatus(), showBlocklistStatus(), showXmlStatus()]);
 
   // Install a wrapper around uptake Telemetry to catch events.
   const original = UptakeTelemetry.report;
@@ -413,7 +368,7 @@ async function main() {
 
   // Poll for changes button.
   document.getElementById("run-poll").onclick = async () => {
-    showGlobalError("");
+    showGlobalError(null);
     try {
       await RemoteSettings.pollChanges();
     } catch (e) {
@@ -431,7 +386,7 @@ async function main() {
 
   // Clear all data.
   document.getElementById("clear-all-data").onclick = async () => {
-    showGlobalError("");
+    showGlobalError(null);
     try {
       await controller.clearPollingStatus();
       await controller.deleteAllLocal();
@@ -450,7 +405,9 @@ function asDate(timestamp) {
 }
 
 function showGlobalError(error) {
-  console.error(error);
+  if (error) {
+    console.error(error);
+  }
   document.getElementById("polling-error").textContent = error;
 }
 
@@ -491,14 +448,7 @@ async function showXmlStatus() {
 
 async function showPollingStatus() {
   const result = await controller.pollingStatus();
-  const {
-    server,
-    backoff,
-    changespath,
-    lastPoll,
-    timestamp,
-    clockskew
-  } = result;
+  const { server, backoff, changespath, lastPoll, timestamp, clockskew } = result;
 
   const url = `${server}${changespath}`;
   document.getElementById("polling-url").textContent = url;
@@ -518,33 +468,18 @@ async function showBlocklistStatus() {
   statusList.innerHTML = "";
 
   infos.forEach(info => {
-    const {
-      client,
-      url,
-      lastChecked,
-      records,
-      localTimestamp,
-      remoteTimestamp
-    } = info;
+    const { client, url, lastChecked, nbRecords, localTimestamp, remoteTimestamp } = info;
 
     const infos = tpl.content.cloneNode(true);
-    infos
-      .querySelector("div")
-      .setAttribute("id", `status-${client.identifier}`);
+    infos.querySelector("div").setAttribute("id", `status-${client.identifier}`);
     infos.querySelector(".blocklist").textContent = name;
-    infos.querySelector(".url a").textContent = `${client.bucketName}/${
-      client.collectionName
-    }`;
+    infos.querySelector(".url a").textContent = `${client.identifier}`;
     infos.querySelector(".url a").setAttribute("href", url);
-    infos.querySelector(".human-timestamp").textContent = asDate(
-      remoteTimestamp
-    );
+    infos.querySelector(".human-timestamp").textContent = asDate(remoteTimestamp);
     infos.querySelector(".timestamp").textContent = remoteTimestamp;
-    infos.querySelector(".human-local-timestamp").textContent = asDate(
-      localTimestamp
-    );
+    infos.querySelector(".human-local-timestamp").textContent = asDate(localTimestamp);
     infos.querySelector(".local-timestamp").textContent = localTimestamp;
-    infos.querySelector(".nb-records").textContent = records.length;
+    infos.querySelector(".nb-records").textContent = nbRecords;
     infos.querySelector(".last-check").textContent = asDate(lastChecked);
 
     infos.querySelector(".clear-data").onclick = async () => {
@@ -561,9 +496,7 @@ async function showBlocklistStatus() {
       await showBlocklistStatus();
       if (error) {
         console.error(error);
-        document.querySelector(
-          `#status-${client.identifier} .error`
-        ).textContent = error;
+        document.querySelector(`#status-${client.identifier} .error`).textContent = error;
       }
     };
     statusList.appendChild(infos);
@@ -571,25 +504,14 @@ async function showBlocklistStatus() {
 }
 
 function showTelemetryEvent(source, status) {
-  const success = [
-    UptakeTelemetry.STATUS.UP_TO_DATE,
-    UptakeTelemetry.STATUS.SUCCESS
-  ];
-  const warn = [
-    UptakeTelemetry.STATUS.BACKOFF,
-    UptakeTelemetry.STATUS.PREF_DISABLED
-  ];
-  const klass =
-    success.indexOf(status) > -1
-      ? "success"
-      : warn.indexOf(status) > -1 ? "warn" : "error";
+  const success = [UptakeTelemetry.STATUS.UP_TO_DATE, UptakeTelemetry.STATUS.SUCCESS];
+  const warn = [UptakeTelemetry.STATUS.BACKOFF, UptakeTelemetry.STATUS.PREF_DISABLED];
+  const klass = success.includes(status) ? "success" : warn.includes(status) ? "warn" : "error";
 
   const tpl = document.getElementById("telemetry-event-tpl");
   const el = tpl.content.cloneNode(true);
   el.querySelector("li").setAttribute("class", klass);
-  el.querySelector(".time").textContent = new Date().toLocaleTimeString([], {
-    hour12: false
-  });
+  el.querySelector(".time").textContent = new Date().toLocaleTimeString([], { hour12: false });
   el.querySelector(".source").textContent = source;
   el.querySelector(".status").textContent = status;
 
