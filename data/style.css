@@ -23,9 +23,9 @@ body {
 
 h1 { grid-area: title }
 #action-box { grid-area: actionbox }
-#blocklists-settings { grid-area: settings }
-#blocklists-polling { grid-area: polling }
-#blocklists-status { grid-area: status }
+#settings { grid-area: settings }
+#polling { grid-area: polling }
+#status { grid-area: status }
 #telemetry-events { grid-area: telemetry }
 
 #action-box {
@@ -46,13 +46,21 @@ section {
   word-break: break-all;
 }
 
-.blocklist-status {
-  margin: 10px;
+#status table {
+  width: 100%;
+  text-align: center;
+}
+.collection-status td a {
+  font-size: 1.4em;
+}
+.collection-status span:last-child {
+  display: block;
+}
+.collection-status button {
   display: inline-block;
-  vertical-align: top;
 }
 
-.local-timestamp, .timestamp, #timestamp {
+.local-timestamp, .remote-timestamp, #poll-timestamp {
   color: var(--subtext-color);
 }
 

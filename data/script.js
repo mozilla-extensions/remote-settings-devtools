@@ -292,7 +292,7 @@ async function main() {
 window.addEventListener("DOMContentLoaded", main);
 
 function asDate(timestamp) {
-  return timestamp ? new Date(timestamp) : "⚠ undefined";
+  return timestamp ? (new Date(timestamp)).toISOString() : "⚠ undefined";
 }
 
 function showGlobalError(error) {
@@ -333,14 +333,14 @@ async function showPollingStatus() {
   document.getElementById("polling-url").setAttribute("href", url);
   document.getElementById("backoff").textContent = backoff;
   document.getElementById("last-poll").textContent = asDate(lastPoll);
-  document.getElementById("timestamp").textContent = timestamp;
+  document.getElementById("poll-timestamp").textContent = timestamp;
   document.getElementById("clockskew").textContent = clockskew;
-  document.getElementById("human-timestamp").textContent = asDate(timestamp);
+  document.getElementById("human-poll-timestamp").textContent = asDate(timestamp);
 }
 
 async function showBlocklistStatus() {
   const tpl = document.getElementById("collection-status-tpl");
-  const statusList = document.getElementById("blocklists-status");
+  const statusList = document.querySelector("#status table tbody");
   const infos = await controller.remoteSettingsStatus();
 
   statusList.innerHTML = "";
@@ -348,13 +348,13 @@ async function showBlocklistStatus() {
   infos.forEach(info => {
     const { client, url, lastChecked, nbRecords, localTimestamp, remoteTimestamp } = info;
 
+    const tableRowId = `status-${client.identifier}`;
     const infos = tpl.content.cloneNode(true);
-    infos.querySelector("div").setAttribute("id", `status-${client.identifier}`);
-    infos.querySelector(".blocklist").textContent = client.identifier;
-    infos.querySelector(".url a").textContent = `${client.identifier}`;
-    infos.querySelector(".url a").setAttribute("href", url);
-    infos.querySelector(".human-timestamp").textContent = asDate(remoteTimestamp);
-    infos.querySelector(".timestamp").textContent = remoteTimestamp;
+    infos.querySelector("tr").setAttribute("id", tableRowId);
+    infos.querySelector(".url").textContent = `${client.identifier}`;
+    infos.querySelector(".url").setAttribute("href", url);
+    infos.querySelector(".human-remote-timestamp").textContent = asDate(remoteTimestamp);
+    infos.querySelector(".remote-timestamp").textContent = remoteTimestamp;
     infos.querySelector(".human-local-timestamp").textContent = asDate(localTimestamp);
     infos.querySelector(".local-timestamp").textContent = localTimestamp;
     infos.querySelector(".nb-records").textContent = nbRecords;
@@ -374,7 +374,7 @@ async function showBlocklistStatus() {
       await showBlocklistStatus();
       if (error) {
         console.error(error);
-        document.querySelector(`#status-${client.identifier} .error`).textContent = error;
+        document.getElementById(tableRowId).querySelector(".error").textContent = error;
       }
     };
     statusList.appendChild(infos);
