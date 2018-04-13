@@ -70,6 +70,8 @@ const controller = {
     switch (env) {
       case "prod":
         Services.prefs.setCharPref("services.settings.server", SERVER_PROD);
+        Services.prefs.setCharPref("services.blocklist.bucket", "blocklists");
+        Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_PROD);
         Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_PROD}/blocklist/${XML_SUFFIX}`);
         for (const client of clients) {
@@ -78,6 +80,8 @@ const controller = {
         break;
       case "prod-preview":
         Services.prefs.setCharPref("services.settings.server", SERVER_PROD);
+        Services.prefs.setCharPref("services.blocklist.bucket", "blocklists-preview");
+        Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning-preview");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_PROD);
         Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_PROD}/preview/${XML_SUFFIX}`);
         for (const client of clients) {
@@ -88,6 +92,8 @@ const controller = {
         break;
       case "stage":
         Services.prefs.setCharPref("services.settings.server", SERVER_STAGE);
+        Services.prefs.setCharPref("services.blocklist.bucket", "blocklists");
+        Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_STAGE);
         Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_STAGE}/blocklist/${XML_SUFFIX}`);
         for (const client of clients) {
@@ -96,6 +102,8 @@ const controller = {
         break;
       case "stage-preview":
         Services.prefs.setCharPref("services.settings.server", SERVER_STAGE);
+        Services.prefs.setCharPref("services.blocklist.bucket", "blocklists-preview");
+        Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning-preview");
         Services.prefs.setCharPref("security.content.signature.root_hash", HASH_STAGE);
         Services.prefs.setCharPref("extensions.blocklist.url", `${SERVER_STAGE}/preview/${XML_SUFFIX}`);
         for (const client of clients) {
