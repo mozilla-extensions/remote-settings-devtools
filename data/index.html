@@ -11,13 +11,12 @@
 
     <section id="action-box">
       <h3>Sync actions</h3>
-      <button id="xml-refresh" title="Full synchronization. Equivalent of nsBlocklistService::notify()">XML refresh</button>
-      <button id="run-poll" title="Poll for changes in blocklist clients (bypass XPCOM/XML)">Poll server</button>
+      <button id="run-poll" title="Poll for changes of remote settings">Poll server</button>
       <button id="clear-poll-data" title="Clear polling status">Clear poll data</button>
       <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
     </section>
 
-    <section id="blocklists-settings">
+    <section id="settings">
       <h2>Configuration</h2>
       <label>
         Environment
@@ -34,7 +33,7 @@
         <dd><a id="server">N/A</a></dd>
       </dl>
       <dl>
-        <dt>Blocklists buckets</dt>
+        <dt>Blocklists bucket</dt>
         <dd id="blocklists-bucket">N/A</dd>
       </dl>
       <dl>
@@ -59,30 +58,6 @@
       </dl>
     </section>
 
-    <section id="xml-status">
-      <h2>XML Status</h2>
-      <dl>
-        <dt>URL</dt>
-        <dd>(guessed) <a id="xml-url">N/A</a></dd>
-      </dl>
-      <dl>
-        <dt>Interval</dt>
-        <dd><span id="xml-interval">N/A</span> seconds</dd>
-      </dl>
-      <dl>
-        <dt>Ping count</dt>
-        <dd><span id="xml-pingcount">N/A</span></dd>
-      </dl>
-      <dl>
-        <dt>Ping total</dt>
-        <dd><span id="xml-pingtotal">N/A</span></dd>
-      </dl>
-      <dl>
-        <dt>Last update</dt>
-        <dd><span id="xml-lastupdate">N/A</span> (<span id="xml-agedays">?</span> days)</dd>
-      </dl>
-    </section>
-
     <section id="polling-status">
       <h2>Polling status</h2>
       <div id="polling-error" class="error"></div>
@@ -92,8 +67,8 @@
       </dl>
       <dl>
         <dt>Local timestamp</dt>
-        <dd id="human-timestamp">N/A</dd>
-        <dd id="timestamp">N/A</dd>
+        <dd id="human-poll-timestamp">N/A</dd>
+        <dd id="poll-timestamp">N/A</dd>
       </dl>
       <dl>
         <dt>Last check</dt>
@@ -109,41 +84,49 @@
       </dl>
     </section>
 
-    <section id="blocklists-status"></section>
+    <section id="status">
+      <table>
+        <thead>
+          <tr>
+            <th>Collection</th>
+            <th>Local Records</th>
+            <th>Last Check</th>
+            <th>Remote Timestamp</th>
+            <th>Local Timestamp</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </section>
+
     <section id="telemetry-events">
       <h2>Uptake Telemetry Events</h2>
       <ul placeholder="None yet, first run sync actions."></ul>
     </section>
 
     <template id="collection-status-tpl">
-      <div class="blocklist-status">
-        <h2 class="blocklist"></h2>
-        <dl class="url">
-          <dt>URL</dt>
-          <dd><a></a></dd>
-        </dl>
-        <dl>
-          <dt>Remote timestamp</dt>
-          <dd class="human-timestamp"></dd>
-          <dd class="timestamp"></dd>
-        </dl>
-        <dl>
-          <dt>Last check</dt>
-          <dd class="last-check"></dd>
-        </dl>
-        <dl>
-          <dt>Local timestamp</dt>
-          <dd class="human-local-timestamp"></dd>
-          <dd class="local-timestamp"></dd>
-        </dl>
-        <dl>
-          <dt>Local records</dt>
-          <dd class="nb-records"></dd>
-        </dl>
-        <button class="sync">Force sync</button>
-        <button class="clear-data">Clear local data</button>
-        <div class="error"></div>
-      </div>
+      <tr class="collection-status">
+        <td>
+          <a class="url"></a>
+          <div class="error"></div>
+        </td>
+        <td class="nb-records"></td>
+        <td class="last-check"></td>
+        <td>
+          <span class="human-remote-timestamp"></span>
+          <span class="remote-timestamp"></span>
+        </td>
+        <td>
+          <span class="human-local-timestamp"></span>
+          <span class="local-timestamp"></span>
+        </td>
+        <td>
+          <button class="sync">Force sync</button>
+          <button class="clear-data">Clear local data</button>
+        </td>
+      </tr>
     </template>
 
     <template id="telemetry-event-tpl">
