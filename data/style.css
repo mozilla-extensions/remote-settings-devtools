@@ -50,8 +50,15 @@ section {
   width: 100%;
   text-align: center;
 }
-.collection-status td a {
+#status table th {
+  white-space: nowrap;
+}
+#status table td:first-child, #status table th:first-child {
+  text-align: left
+}
+.collection-status a.url {
   font-size: 1.4em;
+  white-space: nowrap;
 }
 .collection-status span:last-child {
   display: block;
