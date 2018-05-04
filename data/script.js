@@ -275,6 +275,8 @@ async function main() {
   comboEnv.onchange = async event => {
     await controller.setEnvironment(event.target.value);
     await showPreferences();
+    await showPollingStatus();
+    await showBlocklistStatus();
   };
 
   // Poll for changes button.
