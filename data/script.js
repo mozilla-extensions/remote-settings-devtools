@@ -222,7 +222,9 @@ const controller = {
    * deleteLocal() deletes the local records of the specified client.
    */
   async deleteLocal(client) {
-    Services.prefs.clearUserPref(client.lastCheckTimePref);
+    if (client.lastCheckTimePref) {
+      Services.prefs.clearUserPref(client.lastCheckTimePref);
+    }
     const kintoCol = await client.openCollection();
     return kintoCol.clear();
   },
@@ -358,7 +360,7 @@ async function showBlocklistStatus() {
     infos.querySelector(".human-local-timestamp").textContent = asDate(localTimestamp);
     infos.querySelector(".local-timestamp").textContent = localTimestamp;
     infos.querySelector(".nb-records").textContent = nbRecords;
-    infos.querySelector(".last-check").textContent = asDate(lastChecked);
+    infos.querySelector(".last-check").textContent = client.lastCheckTimePref ? asDate(lastChecked) : "N/A";
 
     infos.querySelector(".clear-data").onclick = async () => {
       await controller.deleteLocal(client);
