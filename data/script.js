@@ -15,12 +15,11 @@ const HASH_STAGE =
   "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90";
 
 const controller = {
-  clients() {
+  async clients() {
     BlocklistClients.initialize(); // Let Gecko instantiate real clients.
     const blocklistsBucket = Services.prefs.getCharPref("services.blocklist.bucket");
     const pinningBucket = Services.prefs.getCharPref("services.blocklist.pinning.bucket");
-    // This will return existing instances (will signer initialized etc.)
-    return [
+    const blocklistsClients = [
       RemoteSettings(Services.prefs.getCharPref("services.blocklist.addons.collection"), {
         bucketName: blocklistsBucket
       }),
@@ -37,15 +36,29 @@ const controller = {
         bucketName: pinningBucket
       })
     ];
-    // TODO: add clients using main bucket (or add a RemoteSettings.inspect())
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1453692
+
+    // Main clients can be instantiated with default options.
+    const mainBucket = Services.prefs.getCharPref("services.settings.default_bucket");
+    const server = Services.prefs.getCharPref("services.settings.server");
+    const changespath = Services.prefs.getCharPref("services.settings.changes.path");
+    const response = await fetch(`${server}${changespath}`);
+    const { data: changes } = await response.json();
+    const mainClients = changes.reduce((acc, change) => {
+      const { bucket, collection } = change;
+      if (bucket == mainBucket) {
+        acc.push(RemoteSettings(collection));
+      }
+      return acc;
+    }, []);
+
+    return blocklistsClients.concat(mainClients);
   },
 
   /**
    * guessEnvironment() will read the current preferences and return the
    * environment name (suffixed with `preview` if relevant).
    */
-  guessEnvironment() {
+  async guessEnvironment() {
     const server = Services.prefs.getCharPref("services.settings.server");
     let environment = "custom";
     if (server == SERVER_PROD) {
@@ -53,7 +66,8 @@ const controller = {
     } else if (server == SERVER_STAGE) {
       environment = "stage";
     }
-    if (this.clients().every(c => c.bucketName.includes("-preview"))) {
+    const clients = await this.clients();
+    if (clients.every(c => c.bucketName.includes("-preview"))) {
       environment += "-preview";
     }
     return environment;
@@ -63,8 +77,8 @@ const controller = {
    * setEnvironment() will set the necessary internal preferences to switch from
    * an environment to another.
    */
-  setEnvironment(env) {
-    const clients = this.clients();
+  async setEnvironment(env) {
+    const clients = await this.clients();
     switch (env) {
       case "prod":
         Services.prefs.setCharPref("services.settings.server", SERVER_PROD);
@@ -172,6 +186,8 @@ const controller = {
 
   /**
    * remoteSettingsStatus() returns information about each remote settings collection.
+   * TODO: rely on some helper like `RemoteSettings.inspect()`
+   * See https://bugzilla.mozilla.org/show_bug.cgi?id=1453692
    */
   async remoteSettingsStatus() {
     const server = Services.prefs.getCharPref("services.settings.server");
@@ -188,8 +204,9 @@ const controller = {
       return acc;
     }, {});
 
+    const clients = await this.clients();
     const results = [];
-    for (const client of this.clients()) {
+    for (const client of clients) {
       const { bucketName: bid, collectionName: cid } = client;
       const url = `${server}/buckets/${bid}/collections/${bid}/records`;
       const lastCheckedSeconds = Services.prefs.getIntPref(client.lastCheckTimePref, undefined);
@@ -233,7 +250,8 @@ const controller = {
    * deleteAllLocal() deletes the local records of every collection.
    */
   async deleteAllLocal() {
-    for (const client of this.clients()) {
+    const clients = await this.clients();
+    for (const client of clients) {
       await this.deleteLocal(client);
     }
   }
@@ -251,11 +269,11 @@ async function main() {
   };
 
   // Change environment.
-  const environment = controller.guessEnvironment();
+  const environment = await controller.guessEnvironment();
   const comboEnv = document.getElementById("environment");
   comboEnv.value = environment;
   comboEnv.onchange = async event => {
-    controller.setEnvironment(event.target.value);
+    await controller.setEnvironment(event.target.value);
     await showPreferences();
   };
 
