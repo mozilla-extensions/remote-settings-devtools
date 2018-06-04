@@ -1,7 +1,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { RemoteSettings } = Cu.import("resource://services-common/remote-settings.js", {});
+const { RemoteSettings } = Cu.import("resource://services-settings/remote-settings.js", {});
 const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
 const { UpdateUtils } = Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
