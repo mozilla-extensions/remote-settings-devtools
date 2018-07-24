@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+  <section id="action-box">
+    <h3>Sync actions</h3>
+    <button id="run-poll" title="Poll for changes of remote settings">Poll server</button>
+    <button id="clear-poll-data" title="Clear polling status">Clear poll data</button>
+    <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
+  </section>
+
+  <section id="settings">
+    <h3>Environment</h3>
+    <select id="environment">
+      <option value="custom"></option>
+      <option value="prod">Prod</option>
+      <option value="stage">Stage</option>
+    </select>
+  </section>
+
+  <section id="polling-status">
+    <h2>Status</h2>
+    <div id="polling-error" class="error"></div>
+    <dl>
+      <dt>URL</dt>
+      <dd><a id="polling-url"></a></dd>
+    </dl>
+    <dl>
+      <dt>Server timestamp</dt>
+      <dd id="human-server-timestamp">N/A</dd>
+      <dd id="server-timestamp">N/A</dd>
+    </dl>
+    <dl>
+      <dt>Local timestamp</dt>
+      <dd id="human-local-timestamp">N/A</dd>
+      <dd id="local-timestamp">N/A</dd>
+    </dl>
+    <dl>
+      <dt>Last check</dt>
+      <dd id="last-check">N/A</dd>
+    </dl>
+  </section>
+
+  <section id="status">
+    <table>
+      <thead>
+        <tr>
+          <th>Collection</th>
+          <th>Last Check</th>
+          <th>Remote Timestamp</th>
+          <th>Local Timestamp</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </section>
+</body>
+
+<template id="collection-status-tpl">
+  <tr class="collection-status">
+    <td>
+      <a class="url"></a>
+      <div class="error"></div>
+    </td>
+    <td class="last-check"></td>
+    <td class="server">
+      <span class="human-server-timestamp"></span>
+      <span class="server-timestamp"></span>
+    </td>
+    <td class="local">
+      <span class="human-local-timestamp"></span>
+      <span class="local-timestamp"></span>
+    </td>
+    <td class="actions">
+      <button class="sync">Force sync</button>
+      <button class="clear-data">Clear local data</button>
+    </td>
+  </tr>
+</template>
+
+<script type="text/javascript" src="script.js"></script>
+
+</html>

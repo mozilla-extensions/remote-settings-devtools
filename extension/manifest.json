@@ -1,0 +1,34 @@
+{
+  "manifest_version": 2,
+  "name": "remotesettings-devtools",
+  "version": "1.0.0",
+  "description": "A set of tools for interacting with the Firefox Remote Settings",
+  "homepage_url": "https://github.com/leplatrem/aboutremotesettings",
+
+  "applications": {
+    "gecko": {
+      "id": "about-remotesettings@mozilla.com",
+      "strict_min_version": "62"
+    }
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "browser_action": {
+    "default_title": "Remote Settings Devtools",
+    "browser_style": true
+  },
+
+  "experiment_apis": {
+    "remotesettings": {
+      "schema": "experiments/remotesettings/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/remotesettings/api.js",
+        "paths": [["experiments", "remotesettings"]]
+      }
+    }
+  }
+}
