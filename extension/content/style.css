@@ -1,0 +1,100 @@
+@import url("chrome://global/skin/in-content/common.css");
+
+html, body {
+  max-height: 100vh;
+  max-width: 100vw;
+
+  --success-text-color: green;
+  --error-text-color: red;
+  --subtext-color: #888;
+}
+
+body {
+  margin: 40px;
+  display: grid;
+  grid-template-areas:
+      "actionbox  actionbox  settings"
+      "polling    status     status"
+      "polling    status     status"
+      "polling    status     status";
+  grid-template-columns: 1fr 2fr max-content;
+  grid-gap: 10px;
+
+  color: var(--in-content-text-color);
+}
+
+body.loading {
+  opacity: 0.5;
+}
+
+#action-box { grid-area: actionbox }
+#settings { grid-area: settings }
+#polling { grid-area: polling }
+#status { grid-area: status }
+
+h2, h3 {
+  display: inline-block;
+  margin: unset;
+}
+
+dt {
+  font-weight: bold;
+}
+
+.error {
+  color: var(--error-text-color);
+}
+
+section {
+  border: 1px solid var(--in-content-border-color);
+  background-color: white;
+  padding: 10px;
+  word-break: break-all;
+}
+
+#settings {
+  justify-self: end;
+}
+
+#action-box {
+  justify-self: start;
+}
+
+#status table {
+  width: 100%;
+  text-align: center;
+}
+#status table th {
+  white-space: nowrap;
+}
+#status table td:first-child, #status table th:first-child {
+  text-align: left
+}
+
+.collection-status.loading {
+  opacity: 0.5;
+}
+.collection-status a.url {
+  font-size: 1.4em;
+  white-space: nowrap;
+}
+.collection-status span:last-child {
+  display: block;
+}
+.collection-status button {
+  display: inline-block;
+}
+
+.local-timestamp, .server-timestamp, #local-timestamp, #server-timestamp {
+  color: var(--subtext-color);
+}
+
+.up-to-date::before {
+  content: "✔";
+  color: var(--success-text-color);
+}
+
+.unsync::before {
+  content: "⚠";
+  color: var(--error-text-color);
+}
