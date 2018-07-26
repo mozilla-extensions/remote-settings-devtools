@@ -13,6 +13,8 @@ This addon provides some tools to assist developers with remote settings.
 
 - Load from preview collections
 
+![](screenshot.png)
+
 # Install
 
 - Open ``about:debugging``
