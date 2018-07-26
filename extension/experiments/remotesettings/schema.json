@@ -4,6 +4,13 @@
     "description": "Remote Settings",
     "functions": [
       {
+        "name": "getState",
+        "type": "function",
+        "description": "Return current state",
+        "async": true,
+        "parameters": []
+      },
+      {
         "name": "pollChanges",
         "type": "function",
         "description": "Polls for changes",

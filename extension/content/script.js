@@ -69,6 +69,8 @@ async function refreshUI(state) {
     environment,
   } = state;
 
+  showLoading(false);
+
   document.getElementById("environment").value = environment;
   document.getElementById("polling-url").textContent = pollingEndpoint;
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
@@ -133,6 +135,15 @@ async function refreshUI(state) {
 }
 
 async function main() {
+  // Load the UI in the background.
+  remotesettings
+    .getState()
+    .then(data => {
+      showLoading(false);
+      refreshUI(data);
+    })
+    .catch(showGlobalError);
+
   remotesettings.onStateChanged.addListener(data => {
     showLoading(false);
     try {

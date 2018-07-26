@@ -1,21 +1,33 @@
-# About Remote Settings
+# Remote Settings Devtools
 
-This addon shows information about remote settings updates.
+This addon provides some tools to assist developers with remote settings.
 
-Once installed, visit `about:remotesettings`
+# Features
 
-![](screenshot.png)
+- Trigger synchronization manually
+- Inspect local data
+- Clear local data
+- Switch from/to STAGE and PROD
 
-The source code is at https://github.com/leplatrem/aboutremotesettings and pull requests
-are welcome!
+# Planned Features
+
+- Load from preview collections
+
+# Install
+
+- Open ``about:debugging``
+- Load temporary addon and pick the .zip file
+
+> Note: it is highly recommended to use a temporary or development user profile
 
 # Development
 
-The easiest way to develop/debug this is:
+```
+npm install
+```
 
-* Clone the git repo locally.
-* In `about:config`, turn `extensions.legacy.enabled` to `true`
-* In `about:debugging`, load the extension by selecting the `chrome.manifest` file
-* Open `about:remotesettings`
-* Changes on HTML/CSS/JS files are picked up automatically
-* Press the *Reload* button in the `about:debugging` to reinstall
+Run in a browser with live-reload:
+
+```
+web-ext run --firefox-binary ~/path/to/firefox -s ./extension/
+```

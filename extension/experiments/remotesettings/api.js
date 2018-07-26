@@ -63,6 +63,8 @@ var remotesettings = class extends ExtensionAPI {
     return {
       experiments: {
         remotesettings: {
+          getState,
+
           async pollChanges() {
             try {
               await RemoteSettings.pollChanges();
