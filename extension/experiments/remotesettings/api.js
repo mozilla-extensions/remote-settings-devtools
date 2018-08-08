@@ -18,12 +18,15 @@ const HASH_STAGE =
 async function getState() {
   const inspected = await RemoteSettings.inspect();
 
-  const { serverURL } = inspected;
+  const { serverURL, mainBucket } = inspected;
   let environment = "custom";
   if (serverURL == SERVER_PROD) {
     environment = "prod";
   } else if (serverURL == SERVER_STAGE) {
     environment = "stage";
+  }
+  if (mainBucket.includes("-preview")) {
+    environment += "-preview";
   }
 
   return {
@@ -100,6 +103,34 @@ var remotesettings = class extends ExtensionAPI {
               );
               // We don't want to load dumps for stage since the datasets don't always overlap.
               Services.prefs.setBoolPref("services.settings.load_dump", false);
+            }
+
+            if (env.includes("-preview")) {
+              Services.prefs.setCharPref(
+                "services.settings.default_bucket",
+                "main-preview",
+              );
+              Services.prefs.setCharPref(
+                "services.blocklist.bucket",
+                "blocklists-preview",
+              );
+              Services.prefs.setCharPref(
+                "services.blocklist.pinning.bucket",
+                "pinning-preview",
+              );
+            } else {
+              Services.prefs.setCharPref(
+                "services.settings.default_bucket",
+                "main",
+              );
+              Services.prefs.setCharPref(
+                "services.blocklist.bucket",
+                "blocklists",
+              );
+              Services.prefs.setCharPref(
+                "services.blocklist.pinning.bucket",
+                "pinning",
+              );
             }
 
             refreshUI();
