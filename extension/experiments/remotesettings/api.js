@@ -160,7 +160,7 @@ var remotesettings = class extends ExtensionAPI {
            */
           async deleteLocal(bucket, collection) {
             try {
-              const client = RemoteSettings(collection, { bucketName: bucket });
+              const client = RemoteSettings(collection);
               Services.prefs.clearUserPref(client.lastCheckTimePref);
               const kintoCol = await client.openCollection();
               await kintoCol.clear();
@@ -178,7 +178,7 @@ var remotesettings = class extends ExtensionAPI {
            */
           async forceSync(bucket, collection) {
             try {
-              const client = RemoteSettings(collection, { bucketName: bucket });
+              const client = RemoteSettings(collection);
               const serverTimeMs =
                 Services.prefs.getIntPref(
                   "services.settings.last_update_seconds",
