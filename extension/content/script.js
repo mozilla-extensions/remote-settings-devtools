@@ -49,7 +49,7 @@ function showGlobalError(error) {
 function showSyncError(bucket, collection, error) {
   showLoading(false);
   if (error) {
-    console.error("Sync error", error);
+    console.error(`Sync error for ${bucket}/${collection}`, error);
   }
   const tableRowId = `status-${bucket}/${collection}`;
   const row = document.getElementById(tableRowId);
