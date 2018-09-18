@@ -41,17 +41,18 @@ function refreshUI() {
 }
 
 function reportError(error) {
-  console.log(error);
   // If the error is for a particular collection then some details are attached
   // (see RemoteSettings::pollChanges)
   if (error.details) {
     const { bucket, collection } = error.details;
+    console.log(`Error with ${bucket}/${collection}`, error);
     Services.obs.notifyObservers(null, "remotesettings-sync-error", {
       bucket,
       collection,
       error: error.toString(),
     });
   } else {
+    console.log(error);
     // eg. polling error, network error etc.
     Services.obs.notifyObservers(
       null,
@@ -160,7 +161,7 @@ var remotesettings = class extends ExtensionAPI {
            */
           async deleteLocal(bucket, collection) {
             try {
-              const client = RemoteSettings(collection, { bucketName: bucket });
+              const client = RemoteSettings(collection);
               Services.prefs.clearUserPref(client.lastCheckTimePref);
               const kintoCol = await client.openCollection();
               await kintoCol.clear();
@@ -178,7 +179,7 @@ var remotesettings = class extends ExtensionAPI {
            */
           async forceSync(bucket, collection) {
             try {
-              const client = RemoteSettings(collection, { bucketName: bucket });
+              const client = RemoteSettings(collection);
               const serverTimeMs =
                 Services.prefs.getIntPref(
                   "services.settings.last_update_seconds",
