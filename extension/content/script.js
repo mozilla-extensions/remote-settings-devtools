@@ -153,9 +153,10 @@ async function main() {
     }
   });
   remotesettings.onGlobalError.addListener(error => showGlobalError(error));
-  remotesettings.onSyncError.addListener((bucket, collection, error) =>
-    showSyncError(bucket, collection, error),
-  );
+  remotesettings.onSyncError.addListener(data => {
+    const { bucket, collection, error } = JSON.parse(data);
+    showSyncError(bucket, collection, error);
+  });
 
   document.getElementById("environment").onchange = async event => {
     showGlobalError(null);

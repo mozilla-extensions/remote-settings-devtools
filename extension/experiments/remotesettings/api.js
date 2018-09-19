@@ -46,11 +46,11 @@ function reportError(error) {
   if (error.details) {
     const { bucket, collection } = error.details;
     console.log(`Error with ${bucket}/${collection}`, error);
-    Services.obs.notifyObservers(null, "remotesettings-sync-error", {
+    Services.obs.notifyObservers(null, "remotesettings-sync-error", JSON.stringify({
       bucket,
       collection,
       error: error.toString(),
-    });
+    }));
   } else {
     console.log(error);
     // eg. polling error, network error etc.
