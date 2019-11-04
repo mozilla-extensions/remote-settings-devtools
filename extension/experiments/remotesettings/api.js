@@ -18,6 +18,10 @@ const HASH_STAGE =
 const HASH_LOCAL =
   "5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE";
 
+
+const MEGAPHONE_STAGE = "https://autopush.stage.mozaws.net";
+
+
 async function getState() {
   const inspected = await RemoteSettings.inspect();
 
@@ -98,6 +102,7 @@ var remotesettings = class extends ExtensionAPI {
                 "security.content.signature.root_hash",
                 HASH_PROD,
               );
+              Services.prefs.clearUserPref("dom.push.serverURL");
               Services.prefs.clearUserPref("services.settings.load_dump");
             } else if (env.includes("stage")) {
               Services.prefs.setCharPref(
@@ -108,6 +113,7 @@ var remotesettings = class extends ExtensionAPI {
                 "security.content.signature.root_hash",
                 HASH_STAGE,
               );
+              Services.prefs.setCharPref("dom.push.serverURL", MEGAPHONE_STAGE);
               // We don't want to load dumps for stage since the datasets don't always overlap.
               Services.prefs.setBoolPref("services.settings.load_dump", false);
             } else if (env.includes("local")) {
@@ -119,6 +125,7 @@ var remotesettings = class extends ExtensionAPI {
                 "security.content.signature.root_hash",
                 HASH_LOCAL,
               );
+              Services.prefs.clearUserPref("dom.push.serverURL");
               Services.prefs.setBoolPref("services.settings.load_dump", false);
             }
 
