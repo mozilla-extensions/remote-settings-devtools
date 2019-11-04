@@ -47,7 +47,7 @@ dt {
 
 section {
   border: 1px solid var(--in-content-border-color);
-  background-color: white;
+  background-color: var(--in-content-box-background);
   padding: 10px;
   word-break: break-all;
 }
