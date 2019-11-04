@@ -196,12 +196,7 @@ var remotesettings = class extends ExtensionAPI {
           async forceSync(bucket, collection) {
             try {
               const client = RemoteSettings(collection);
-              const serverTimeMs =
-                Services.prefs.getIntPref(
-                  "services.settings.last_update_seconds",
-                ) * 1000;
-              const lastModified = Infinity; // Force sync, never up-to-date.
-              await client.maybeSync(lastModified, serverTimeMs);
+              await client.sync();
 
               refreshUI();
             } catch (e) {
