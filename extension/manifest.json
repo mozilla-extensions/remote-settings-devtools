@@ -1,14 +1,14 @@
 {
   "manifest_version": 2,
   "name": "remote-settings-devtools",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A set of tools for interacting with the Firefox Remote Settings",
   "homepage_url": "https://github.com/mozilla/remote-settings-devtools",
 
   "applications": {
     "gecko": {
       "id": "remote-settings-devtools@mozilla.com",
-      "strict_min_version": "62.0"
+      "strict_min_version": "65.0"
     }
   },
 
