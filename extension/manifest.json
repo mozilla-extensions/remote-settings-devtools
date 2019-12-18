@@ -16,6 +16,11 @@
     "scripts": ["background.js"]
   },
 
+  "icons": {
+    "48": "icon.png",
+    "96": "icon.png"
+  },
+
   "browser_action": {
     "default_title": "Remote Settings Devtools",
     "browser_style": true
