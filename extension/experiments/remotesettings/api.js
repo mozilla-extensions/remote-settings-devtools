@@ -186,8 +186,12 @@ var remotesettings = class extends ExtensionAPI {
             try {
               const client = RemoteSettings(collection);
               Services.prefs.clearUserPref(client.lastCheckTimePref);
-              const kintoCol = await client.openCollection();
-              await kintoCol.clear();
+
+              if (typeof client.openCollection == "function") {
+                await (await client.openCollection()).clear();
+              } else {
+                await client.db.clear();
+              }
 
               refreshUI();
             } catch (e) {
