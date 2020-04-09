@@ -6,8 +6,9 @@
   "private": true,
   "license": "MPLv2",
   "scripts": {
-    "build": "npm-run-all clean build:extension",
+    "build": "npm-run-all clean build:extension build:finalize",
     "build:extension": "web-ext build -s ./extension/ --overwrite-dest",
+    "build:finalize": "mv web-ext-artifacts/*.zip web-ext-artifacts/remote-settings-devtools.xpi",
     "clean": "rimraf web-ext-artifacts",
     "lint": "yarn run lint:eslint",
     "lint:eslint": "eslint --ignore-pattern '!.eslintrc.js' --ignore-pattern '!.prettierrc.js' .eslintrc.js .prettierrc.js extension",
