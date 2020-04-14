@@ -18,9 +18,7 @@ const HASH_STAGE =
 const HASH_LOCAL =
   "5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE";
 
-
 const MEGAPHONE_STAGE = "https://autopush.stage.mozaws.net";
-
 
 async function getState() {
   const inspected = await RemoteSettings.inspect();
@@ -55,14 +53,18 @@ function reportError(error) {
   // (see RemoteSettings::pollChanges)
   if (error.details) {
     const { bucket, collection } = error.details;
-    console.log(`Error with ${bucket}/${collection}`, error);
-    Services.obs.notifyObservers(null, "remotesettings-sync-error", JSON.stringify({
-      bucket,
-      collection,
-      error: error.toString(),
-    }));
+    console.error(`Error with ${bucket}/${collection}`, error);
+    Services.obs.notifyObservers(
+      null,
+      "remotesettings-sync-error",
+      JSON.stringify({
+        bucket,
+        collection,
+        error: error.toString(),
+      }),
+    );
   } else {
-    console.log(error);
+    console.error(error);
     // eg. polling error, network error etc.
     Services.obs.notifyObservers(
       null,
