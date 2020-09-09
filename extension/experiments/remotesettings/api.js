@@ -85,7 +85,9 @@ var remotesettings = class extends ExtensionAPI {
             // Generate a fake timestamp to bust cache.
             const randomCacheBust = 99990000 + Math.floor(Math.random() * 9999);
             try {
-              await RemoteSettings.pollChanges({ expectedTimestamp: randomCacheBust });
+              await RemoteSettings.pollChanges({
+                expectedTimestamp: randomCacheBust,
+              });
               refreshUI();
             } catch (e) {
               reportError(e);
