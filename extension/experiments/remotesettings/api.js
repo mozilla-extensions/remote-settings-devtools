@@ -144,10 +144,6 @@ var remotesettings = class extends ExtensionAPI {
                 "services.blocklist.bucket",
                 "blocklists-preview",
               );
-              Services.prefs.setCharPref(
-                "services.blocklist.pinning.bucket",
-                "pinning-preview",
-              );
             } else {
               Services.prefs.setCharPref(
                 "services.settings.default_bucket",
@@ -156,10 +152,6 @@ var remotesettings = class extends ExtensionAPI {
               Services.prefs.setCharPref(
                 "services.blocklist.bucket",
                 "blocklists",
-              );
-              Services.prefs.setCharPref(
-                "services.blocklist.pinning.bucket",
-                "pinning",
               );
             }
 
