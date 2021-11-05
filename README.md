@@ -29,15 +29,15 @@ This addon relies on the [Experiments API](https://firefox-source-docs.mozilla.o
 
 Unsigned addons with experiments can only be loaded in Firefox Nightly and Developer Edition, with specific preferences set.
 
-1. Download Nightly
+1. Download [Nightly](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)
 2. Install dependencies with `npm install`
 3. We'll use the `web-ext` runner, with a persistent profile:
-```
+```bash
 npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension --firefox-profile rs-devtools --profile-create-if-missing
 ```
 4. (*first run only*) Adjust preferences in `about:config`:
-- `xpinstall.signatures.required`: false
-- `extensions.experiments.enabled`: true
+- `xpinstall.signatures.required`: `false`
+- `extensions.experiments.enabled`: `true`
 5. Reload the addon to take these prefs changes into account, in `about:debugging`
 6. Enjoy!
 
