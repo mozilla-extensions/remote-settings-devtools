@@ -24,15 +24,22 @@ This addon provides some tools to assist developers with remote settings.
 
 # Development
 
-```
-npm install
-```
 
-Run in a browser with live-reload:
+This addon relies on the [Experiments API](https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/basics.html#webextensions-experiments) in order to expose Remote Settings internals to the Web Extension.
 
+Unsigned addons with experiments can only be loaded in Firefox Nightly and Developer Edition, with specific preferences set.
+
+1. Download Nightly
+2. Install dependencies with `npm install`
+3. We'll use the `web-ext` runner, with a persistent profile:
 ```
-web-ext run --firefox-binary ~/path/to/firefox -s ./extension/
+web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension --firefox-profile rs-devtools --profile-create-if-missing
 ```
+4. (*first run only*) Adjust preferences in `about:config`:
+- `xpinstall.signatures.required`: false
+- `extensions.experiments.enabled`: true
+5. Reload the addon to take these prefs changes into account, in `about:debugging`
+6. Enjoy!
 
 # Release
 
