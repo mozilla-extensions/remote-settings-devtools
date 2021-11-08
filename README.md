@@ -17,7 +17,7 @@ This addon provides some tools to assist developers with remote settings.
 
 # Install
 
-- Pick the .xpi file from the [releases page](https://github.com/mozilla/remote-settings-devtools/releases).
+- Pick the .xpi file from the [releases page](https://github.com/mozilla-extensions/remote-settings-devtools/releases).
 - When asked for comnfirmation, select "Continue to installation".
 
 > Note: it is highly recommended to use a temporary or development user profile
