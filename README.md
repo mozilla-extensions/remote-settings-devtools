@@ -33,7 +33,7 @@ Unsigned addons with experiments can only be loaded in Firefox Nightly and Devel
 2. Install dependencies with `npm install`
 3. We'll use the `web-ext` runner, with a persistent profile:
 ```
-web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension --firefox-profile rs-devtools --profile-create-if-missing
+npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension --firefox-profile rs-devtools --profile-create-if-missing
 ```
 4. (*first run only*) Adjust preferences in `about:config`:
 - `xpinstall.signatures.required`: false
