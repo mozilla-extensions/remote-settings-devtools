@@ -20,13 +20,13 @@
       {
         "name": "switchEnvironment",
         "type": "function",
-        "description": "Sets the necessary internal preferences to switch from STAGE to PROD",
+        "description": "Sets the necessary internal preferences to switch between DEV, STAGE, or PROD",
         "async": true,
         "parameters": [
           {
             "name": "env",
             "type": "string",
-            "description": "One of 'stage' or 'prod'"
+            "description": "One of 'dev', 'stage', or 'prod'"
           }
         ]
       },

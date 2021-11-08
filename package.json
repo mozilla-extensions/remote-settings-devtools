@@ -6,23 +6,25 @@
   "private": true,
   "license": "MPLv2",
   "scripts": {
-    "build": "npm-run-all clean build:extension build:finalize",
-    "build:extension": "web-ext build -s ./extension/ --overwrite-dest",
+    "build": "npm-run-all clean build:*",
+    "build:extension": "npx web-ext build -s ./extension/ --overwrite-dest",
     "build:finalize": "mv web-ext-artifacts/*.zip web-ext-artifacts/remote-settings-devtools.xpi",
-    "clean": "rimraf web-ext-artifacts",
-    "lint": "yarn run lint:eslint",
-    "lint:eslint": "eslint --ignore-pattern '!.eslintrc.js' --ignore-pattern '!.prettierrc.js' .eslintrc.js .prettierrc.js extension",
-    "lint:fix": "yarn run lint:eslint --fix"
+    "clean": "npx rimraf web-ext-artifacts",
+    "lint": "npm run lint:eslint",
+    "lint:eslint": "npx eslint --ignore-pattern '!.eslintrc.js' --ignore-pattern '!.prettierrc.js' .eslintrc.js .prettierrc.js extension",
+    "lint:fix": "npm run lint:eslint -- --fix"
   },
   "devDependencies": {
-    "eslint": "4.19.1",
-    "eslint-config-prettier": "2.10.0",
-    "eslint-plugin-mozilla": "0.16.3",
-    "eslint-plugin-no-unsanitized": "3.2.0",
-    "eslint-plugin-prettier": "2.7.0",
-    "npm-run-all": "4.1.5",
-    "prettier": "1.19.1",
-    "rimraf": "2.7.1",
-    "web-ext": "2.9.3"
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-fetch-options": "^0.0.5",
+    "eslint-plugin-html": "^6.2.0",
+    "eslint-plugin-mozilla": "^2.11.1",
+    "eslint-plugin-no-unsanitized": "^3.2.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^1.19.1",
+    "rimraf": "^3.0.2",
+    "web-ext": "^6.5.0"
   }
 }
