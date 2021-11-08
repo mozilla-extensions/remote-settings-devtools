@@ -1,6 +1,6 @@
 {
   "name": "remote-settings-devtools",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "A set of tools for interacting with the Firefox Remote Settings",
   "homepage_url": "https://github.com/mozilla/remote-settings-devtools",
   "private": true,
