@@ -70,8 +70,14 @@ npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension
 9. Go to [#addons-pipeline](https://mozilla.slack.com/archives/CMKP7NPKN) and request sign off:
     > Hi! There's a new version of the remote-settings-devtools extension, remote-settings-devtools-X.Y.Z, ready for sign off. It does THIS AND THAT. Thank you!
 
-### Final step
-<!-- TODO: get a link to Taskcluster where this signed binary is -->
-1. Download signed binary from Taskcluster, and attach `remote-settings-devtools-X.Y.Z.xpi` binary file on GitHub release page
+### Download signed binary from Taskcluster
+
+1. Go to [XPI Releases](https://shipit.mozilla-releng.net/xpi)
+2. Click on `Promote task` on the XPI release you want to download the signed binary from, which will take you to Taskcluster
+3. Click on the `release-signing-remote-settings-devtools` task
+4. Click the `Artifacts` dropdown on the right side of the page
+5. Download the artifact named `public/build/remote-settings-devtools.xpi` to your machine
+6. Append `-X.Y.Z` to the end of the filename
+7. Attach `remote-settings-devtools-X.Y.Z.xpi` signed binary file to the corresponding GitHub release
 
 Additional information may be found [here](https://github.com/mozilla-extensions/xpi-manifest/blob/master/docs/releasing-a-xpi.md#kicking-off-the-release).
