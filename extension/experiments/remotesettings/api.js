@@ -60,6 +60,8 @@ function enablePreview(enabled) {
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1702759
   if (typeof RemoteSettings.enablePreviewMode == "function") {
     RemoteSettings.enablePreviewMode(enabled);
+    // Set pref to persist change across restarts.
+    Services.prefs.setBoolPref("services.settings.preview_enabled", enabled);
     return;
   }
 
