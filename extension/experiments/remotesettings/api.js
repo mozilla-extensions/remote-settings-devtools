@@ -26,7 +26,7 @@ const MEGAPHONE_STAGE = "https://autopush.stage.mozaws.net";
 async function getState() {
   const inspected = await RemoteSettings.inspect();
 
-  const { serverURL, mainBucket } = inspected;
+  const { serverURL, mainBucket, previewMode } = inspected;
   let environment = "custom";
   switch (serverURL) {
     case SERVER_PROD:
@@ -43,7 +43,8 @@ async function getState() {
       break;
   }
 
-  if (mainBucket.includes("-preview")) {
+  // Newest versions return the `previewMode` in `inspect()`
+  if (mainBucket.includes("-preview") || previewMode) {
     environment += "-preview";
   }
 
@@ -52,6 +53,53 @@ async function getState() {
     environment,
     ...inspected,
   };
+}
+
+function enablePreview(enabled) {
+  // Newest versions don't manipulate bucket names from prefs.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1702759
+  if (typeof RemoteSettings.enablePreviewMode == "function") {
+    RemoteSettings.enablePreviewMode(enabled);
+    return;
+  }
+
+  if (enabled) {
+    Services.prefs.setCharPref(
+      "services.settings.default_bucket",
+      "main-preview",
+    );
+    Services.prefs.setCharPref(
+      "services.blocklist.bucket",
+      "blocklists-preview",
+    );
+    Services.prefs.setCharPref(
+      "security.remote_settings.intermediates.bucket",
+      "security-state-preview",
+    );
+    Services.prefs.setCharPref(
+      "security.remote_settings.crlite_filters.bucket",
+      "security-state-preview",
+    );
+    Services.prefs.setCharPref(
+      "services.settings.security.onecrl.bucket",
+      "security-state-preview",
+    );
+  } else {
+    Services.prefs.setCharPref("services.settings.default_bucket", "main");
+    Services.prefs.setCharPref("services.blocklist.bucket", "blocklists");
+    Services.prefs.setCharPref(
+      "security.remote_settings.intermediates.bucket",
+      "security-state",
+    );
+    Services.prefs.setCharPref(
+      "security.remote_settings.crlite_filters.bucket",
+      "security-state",
+    );
+    Services.prefs.setCharPref(
+      "services.settings.security.onecrl.bucket",
+      "security-state",
+    );
+  }
 }
 
 function refreshUI() {
@@ -157,25 +205,7 @@ var remotesettings = class extends ExtensionAPI {
               Services.prefs.setBoolPref("services.settings.load_dump", false);
             }
 
-            if (env.includes("-preview")) {
-              Services.prefs.setCharPref(
-                "services.settings.default_bucket",
-                "main-preview",
-              );
-              Services.prefs.setCharPref(
-                "services.blocklist.bucket",
-                "blocklists-preview",
-              );
-            } else {
-              Services.prefs.setCharPref(
-                "services.settings.default_bucket",
-                "main",
-              );
-              Services.prefs.setCharPref(
-                "services.blocklist.bucket",
-                "blocklists",
-              );
-            }
+            enablePreview(env.includes("-preview"));
 
             refreshUI();
           },
