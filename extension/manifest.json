@@ -5,6 +5,10 @@
   "description": "A set of tools for interacting with the Firefox Remote Settings",
   "homepage_url": "https://github.com/mozilla-extensions/remote-settings-devtools",
 
+  "permissions": [
+    "mozillaAddons",
+  ],
+
   "applications": {
     "gecko": {
       "id": "remote-settings-devtools@mozilla.com",
