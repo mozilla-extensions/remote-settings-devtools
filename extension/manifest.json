@@ -6,7 +6,7 @@
   "homepage_url": "https://github.com/mozilla-extensions/remote-settings-devtools",
 
   "permissions": [
-    "mozillaAddons",
+    "mozillaAddons"
   ],
 
   "applications": {
