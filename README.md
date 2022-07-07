@@ -67,8 +67,7 @@ npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension
 6. Select `CREATE RELEASE` &#8594; `SUBMIT`
 7. Scroll to the bottom of the [pending releases page](https://shipit.mozilla-releng.net/xpi)
 8. Click `Build` on the new release labeled `remote-settings-devtools-X.Y.Z-build1`
-9. Go to [#addons-pipeline](https://mozilla.slack.com/archives/CMKP7NPKN) and request sign off:
-    > Hi! There's a new version of the remote-settings-devtools extension, remote-settings-devtools-X.Y.Z, ready for sign off. It does THIS AND THAT. Thank you!
+9. Submit a [sign off request](https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=FDPDT&title=Mozilla+Add-on+Review+Requests+Intake)
 
 ### Download signed binary from Taskcluster
 
