@@ -67,6 +67,7 @@ async function refreshUI(state) {
     collections,
     pollingEndpoint,
     environment,
+    history,
   } = state;
 
   showLoading(false);
@@ -88,6 +89,21 @@ async function refreshUI(state) {
     lastCheck * 1000,
   );
 
+  // Sync history.
+  const historyTpl = document.getElementById("sync-history-entry-tpl");
+  const historyList = document.querySelector("#sync-history > ul");
+  historyList.innerHTML = "";
+  history["settings-sync"].forEach(entry => {
+    const entryRow = historyTpl.content.cloneNode(true);
+    entryRow.querySelector(".datetime").textContent = humanDate(
+      entry.timestamp,
+    );
+    entryRow.querySelector(".status").textContent = entry.status;
+    entryRow.querySelector(".status").className += ` ${entry.status}`;
+    historyList.appendChild(entryRow);
+  });
+
+  // Table of collections.
   const tpl = document.getElementById("collection-status-tpl");
   const statusTable = document.querySelector("#status table tbody");
 

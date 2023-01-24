@@ -50,6 +50,11 @@
     </dl>
   </section>
 
+  <section id="sync-history">
+    <h2>Sync History</h2>
+    <ul></ul>
+  </section>
+
   <section id="status">
     <table>
       <thead>
@@ -87,6 +92,13 @@
       <button class="clear-data">Clear local data</button>
     </td>
   </tr>
+</template>
+
+<template id="sync-history-entry-tpl">
+  <li>
+    <span class="status"></span>
+    <span class="datetime"></span>
+  </li>
 </template>
 
 <script type="text/javascript" src="script.js"></script>

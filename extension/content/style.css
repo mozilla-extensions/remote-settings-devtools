@@ -15,8 +15,8 @@ body {
   grid-template-areas:
       "actionbox  actionbox  settings"
       "polling    status     status"
-      "polling    status     status"
-      "polling    status     status";
+      "history    status     status"
+      "empty      status     status";
   grid-template-columns: 1fr 2fr max-content;
   grid-gap: 10px;
 
@@ -30,6 +30,7 @@ body.loading {
 #action-box { grid-area: actionbox }
 #settings { grid-area: settings }
 #polling { grid-area: polling }
+#sync-history { grid-area: history }
 #status { grid-area: status }
 
 h2, h3 {
@@ -98,3 +99,21 @@ section {
   content: "⚠";
   color: var(--error-text-color);
 }
+
+#sync-history li {
+  margin: 10px;
+}
+
+#sync-history .status {
+  padding: 3px;
+  margin: 3px;
+  border-radius: 4px;
+}
+
+  #sync-history .status.success {
+    background-color: var(--success-text-color);
+  }
+
+  #sync-history .status:not(.success) {
+    background-color: var(--error-text-color);
+  }
