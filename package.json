@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "eslint": "8.32.0",
-    "eslint-config-prettier": "8.5.0",
+    "eslint-config-prettier": "8.6.0",
     "eslint-plugin-fetch-options": "0.0.5",
     "eslint-plugin-html": "6.2.0",
     "eslint-plugin-mozilla": "2.12.5",
