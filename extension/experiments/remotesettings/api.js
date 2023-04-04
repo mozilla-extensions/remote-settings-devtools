@@ -8,7 +8,7 @@ const { ExtensionError } = ExtensionUtils;
 const SERVER_LOCAL = "http://localhost:8888/v1";
 const SERVER_PROD = "https://firefox.settings.services.mozilla.com/v1";
 const SERVER_STAGE = "https://settings-cdn.stage.mozaws.net/v1";
-const SERVER_DEV = "https://settings.dev.mozaws.net/v1";
+const SERVER_DEV = "https://remote-settings-dev.allizom.org/v1";
 const HASH_PROD =
   "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E";
 const HASH_STAGE =
