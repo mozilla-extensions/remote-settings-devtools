@@ -1,5 +1,5 @@
-XPCOMUtils.defineLazyModuleGetters(this, {
-  RemoteSettings: "resource://services-settings/remote-settings.js",
+ChromeUtils.defineESModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
 const { EventManager } = ExtensionCommon;
