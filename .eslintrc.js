@@ -1,12 +1,25 @@
 /* eslint-env node */
 module.exports = {
-  plugins: ["prettier", "mozilla"],
+  plugins: ["mozilla"],
   extends: [
     "eslint:recommended",
-    "plugin:prettier/recommended",
     "plugin:mozilla/recommended",
   ],
-  rules: {
-    "mozilla/no-define-cc-etc": "off", // seems broken outside of m-c
+  overrides: [
+    {
+      files: ["extension/**"],
+      env: {
+        webextensions: true,
+      },
+    },
+    {
+      files: ["extension/content/*.js", "extension/content/*.mjs"],
+      parserOptions: {
+        sourceType: "module",
+      },
+    },
+  ],
+  parserOptions: {
+    ecmaVersion: "latest",
   },
 };
