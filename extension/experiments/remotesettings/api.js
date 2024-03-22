@@ -9,15 +9,6 @@ const SERVER_LOCAL = "http://localhost:8888/v1";
 const SERVER_PROD = "https://firefox.settings.services.mozilla.com/v1";
 const SERVER_STAGE = "https://firefox.settings.services.allizom.org/v1";
 const SERVER_DEV = "https://remote-settings-dev.allizom.org/v1";
-const HASH_PROD =
-  "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E";
-const HASH_STAGE =
-  "3C:01:44:6A:BE:90:36:CE:A9:A0:9A:CA:A3:A5:20:AC:62:8F:20:A7:AE:32:CE:86:1C:B2:EF:B7:0F:A0:C7:45";
-// DEV signing will use Autograph STAGE
-const HASH_DEV = HASH_STAGE;
-const HASH_LOCAL =
-  "5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE";
-
 const MEGAPHONE_STAGE = "https://autopush.stage.mozaws.net";
 
 async function getState() {
@@ -161,20 +152,12 @@ var remotesettings = class extends ExtensionAPI {
                 "services.settings.server",
                 SERVER_PROD,
               );
-              Services.prefs.setCharPref(
-                "security.content.signature.root_hash",
-                HASH_PROD,
-              );
               Services.prefs.clearUserPref("dom.push.serverURL");
               Services.prefs.clearUserPref("services.settings.load_dump");
             } else if (env.includes("stage")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
                 SERVER_STAGE,
-              );
-              Services.prefs.setCharPref(
-                "security.content.signature.root_hash",
-                HASH_STAGE,
               );
               Services.prefs.setCharPref("dom.push.serverURL", MEGAPHONE_STAGE);
               // We don't want to load dumps for stage since the datasets don't always overlap.
@@ -184,10 +167,6 @@ var remotesettings = class extends ExtensionAPI {
                 "services.settings.server",
                 SERVER_DEV,
               );
-              Services.prefs.setCharPref(
-                "security.content.signature.root_hash",
-                HASH_DEV,
-              );
               Services.prefs.clearUserPref("dom.push.serverURL");
               // We don't want to load dumps for dev since the datasets don't always overlap.
               Services.prefs.setBoolPref("services.settings.load_dump", false);
@@ -195,10 +174,6 @@ var remotesettings = class extends ExtensionAPI {
               Services.prefs.setCharPref(
                 "services.settings.server",
                 SERVER_LOCAL,
-              );
-              Services.prefs.setCharPref(
-                "security.content.signature.root_hash",
-                HASH_LOCAL,
               );
               Services.prefs.clearUserPref("dom.push.serverURL");
               Services.prefs.setBoolPref("services.settings.load_dump", false);
