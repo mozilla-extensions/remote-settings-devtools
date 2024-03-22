@@ -21,7 +21,7 @@
     "eslint-plugin-html": "8.0.0",
     "eslint-plugin-mozilla": "3.7.1",
     "eslint-plugin-no-unsanitized": "4.0.2",
-    "npm-run-all2": "5.0.0",
+    "npm-run-all2": "5.0.2",
     "prettier": "3.2.5",
     "rimraf": "5.0.5",
     "web-ext": "7.11.0"
