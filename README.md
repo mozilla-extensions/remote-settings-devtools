@@ -7,7 +7,7 @@ This addon provides some tools to assist developers with remote settings.
 - Trigger synchronization manually
 - Inspect local data
 - Clear local data
-- Switch from/to STAGE and PROD
+- Switch from/to DEV, STAGE, or PROD
 
 ![](screenshot.png)
 
