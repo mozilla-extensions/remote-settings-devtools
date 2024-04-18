@@ -260,7 +260,7 @@ var remotesettings = class extends ExtensionAPI {
             context,
             name: "remotesettings.onStateChanged",
             register: fire => {
-              const observer = async (subject, topic, data) => {
+              const observer = async () => {
                 const state = await getState();
                 fire.async(JSON.stringify(state));
               };
