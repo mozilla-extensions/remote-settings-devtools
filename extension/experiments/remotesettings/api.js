@@ -9,7 +9,7 @@ const SERVER_LOCAL = "http://localhost:8888/v1";
 const SERVER_PROD = "https://firefox.settings.services.mozilla.com/v1";
 const SERVER_STAGE = "https://firefox.settings.services.allizom.org/v1";
 const SERVER_DEV = "https://remote-settings-dev.allizom.org/v1";
-const MEGAPHONE_STAGE = "https://autopush.stage.mozaws.net";
+const MEGAPHONE_STAGE = "wss://autoconnect.stage.mozaws.net";
 
 async function getState() {
   const inspected = await RemoteSettings.inspect();
