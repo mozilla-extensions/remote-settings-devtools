@@ -215,6 +215,7 @@ var remotesettings = class extends ExtensionAPI {
                 await (await client.openCollection()).clear();
               } else {
                 await client.db.clear();
+                await client.attachments.prune([]);
               }
 
               refreshUI();
