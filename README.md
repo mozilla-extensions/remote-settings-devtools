@@ -60,13 +60,13 @@ npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension
 1. Ensure you're connected to the VPN
 2. Go to [Ship-It](https://shipit.mozilla-releng.net/)
 3. Login with SSO at the top right
-4. Click `NEW XPI RELEASE` at the top and select the following options:
+4. Click `Releases` > `Extensions` > `New` at the top and select the following options:
     - `Available XPIs` &#8594; `remote-settings-devtools`
     - `Available revisions` &#8594; revision with the commit hash associated with the tag that's being released
 5. Ensure the version that was tagged is the one shown
 6. Select `CREATE RELEASE` &#8594; `SUBMIT`
 7. Scroll to the bottom of the [pending releases page](https://shipit.mozilla-releng.net/xpi)
-8. Click `Build` on the new release labeled `remote-settings-devtools-X.Y.Z-build1`
+8. Click `Build` > `Schedule` on the new release labeled `remote-settings-devtools-X.Y.Z-build1`
 9. Submit a [sign off request](https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=FDPDT&title=Mozilla+Add-on+Review+Requests+Intake)
 
 ### Download signed binary from Taskcluster
