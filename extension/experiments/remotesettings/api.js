@@ -153,30 +153,24 @@ var remotesettings = class extends ExtensionAPI {
                 SERVER_PROD,
               );
               Services.prefs.clearUserPref("dom.push.serverURL");
-              Services.prefs.clearUserPref("services.settings.load_dump");
             } else if (env.includes("stage")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
                 SERVER_STAGE,
               );
               Services.prefs.setCharPref("dom.push.serverURL", MEGAPHONE_STAGE);
-              // We don't want to load dumps for stage since the datasets don't always overlap.
-              Services.prefs.setBoolPref("services.settings.load_dump", false);
             } else if (env.includes("dev")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
                 SERVER_DEV,
               );
               Services.prefs.clearUserPref("dom.push.serverURL");
-              // We don't want to load dumps for dev since the datasets don't always overlap.
-              Services.prefs.setBoolPref("services.settings.load_dump", false);
             } else if (env.includes("local")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
                 SERVER_LOCAL,
               );
               Services.prefs.clearUserPref("dom.push.serverURL");
-              Services.prefs.setBoolPref("services.settings.load_dump", false);
             }
 
             enablePreview(env.includes("-preview"));
