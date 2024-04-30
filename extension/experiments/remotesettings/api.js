@@ -14,7 +14,7 @@ const MEGAPHONE_STAGE = "wss://autoconnect.stage.mozaws.net";
 async function getState() {
   const inspected = await RemoteSettings.inspect();
 
-  const { serverURL, mainBucket, previewMode } = inspected;
+  const { serverURL, previewMode } = inspected;
   let environment = "custom";
   switch (serverURL) {
     case SERVER_PROD:
@@ -32,7 +32,7 @@ async function getState() {
   }
 
   // Newest versions return the `previewMode` in `inspect()`
-  if (mainBucket.includes("-preview") || previewMode) {
+  if (previewMode) {
     environment += "-preview";
   }
 
@@ -41,55 +41,6 @@ async function getState() {
     environment,
     ...inspected,
   };
-}
-
-function enablePreview(enabled) {
-  // Newest versions don't manipulate bucket names from prefs.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1702759
-  if (typeof RemoteSettings.enablePreviewMode == "function") {
-    RemoteSettings.enablePreviewMode(enabled);
-    // Set pref to persist change across restarts.
-    Services.prefs.setBoolPref("services.settings.preview_enabled", enabled);
-    return;
-  }
-
-  if (enabled) {
-    Services.prefs.setCharPref(
-      "services.settings.default_bucket",
-      "main-preview",
-    );
-    Services.prefs.setCharPref(
-      "services.blocklist.bucket",
-      "blocklists-preview",
-    );
-    Services.prefs.setCharPref(
-      "security.remote_settings.intermediates.bucket",
-      "security-state-preview",
-    );
-    Services.prefs.setCharPref(
-      "security.remote_settings.crlite_filters.bucket",
-      "security-state-preview",
-    );
-    Services.prefs.setCharPref(
-      "services.settings.security.onecrl.bucket",
-      "security-state-preview",
-    );
-  } else {
-    Services.prefs.setCharPref("services.settings.default_bucket", "main");
-    Services.prefs.setCharPref("services.blocklist.bucket", "blocklists");
-    Services.prefs.setCharPref(
-      "security.remote_settings.intermediates.bucket",
-      "security-state",
-    );
-    Services.prefs.setCharPref(
-      "security.remote_settings.crlite_filters.bucket",
-      "security-state",
-    );
-    Services.prefs.setCharPref(
-      "services.settings.security.onecrl.bucket",
-      "security-state",
-    );
-  }
 }
 
 function refreshUI() {
@@ -179,7 +130,10 @@ var remotesettings = class extends ExtensionAPI {
               Services.prefs.setBoolPref("services.settings.load_dump", false);
             }
 
-            enablePreview(env.includes("-preview"));
+            const previewMode = env.includes("-preview");
+            RemoteSettings.enablePreviewMode(previewMode);
+            // Set pref to persist change across restarts.
+            Services.prefs.setBoolPref("services.settings.preview_enabled", previewMode);
 
             refreshUI();
           },
@@ -202,11 +156,10 @@ var remotesettings = class extends ExtensionAPI {
           },
 
           /**
-           * deleteLocal() deletes the local records of the specified bucket/collection.
-           * @param {String} bucket  bucket name, likely "main"
+           * deleteLocal() deletes the local records of the specified collection.
            * @param {String} collection collection name
            */
-          async deleteLocal(bucket, collection) {
+          async deleteLocal(collection) {
             try {
               const client = RemoteSettings(collection);
               Services.prefs.clearUserPref(client.lastCheckTimePref);
@@ -225,11 +178,10 @@ var remotesettings = class extends ExtensionAPI {
           },
 
           /**
-           * forceSync() will trigger a synchronization at the level only for the specified bucket/collection.
-           * @param {String} bucket  bucket name, likely "main"
+           * forceSync() will trigger a synchronization at the level only for the specified collection.
            * @param {String} collection collection name
            */
-          async forceSync(bucket, collection) {
+          async forceSync(collection) {
             try {
               const client = RemoteSettings(collection);
               await client.sync();
@@ -247,8 +199,8 @@ var remotesettings = class extends ExtensionAPI {
             try {
               const { collections } = await RemoteSettings.inspect();
               // Delete each collection sequentially to avoid collisions in IndexedBD.
-              for (const { bucket, collection } of collections) {
-                await this.deleteLocal(bucket, collection);
+              for (const { collection } of collections) {
+                await this.deleteLocal(collection);
               }
 
               refreshUI();
