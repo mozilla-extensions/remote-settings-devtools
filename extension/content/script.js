@@ -68,11 +68,18 @@ async function refreshUI(state) {
     pollingEndpoint,
     environment,
     history,
+    serverSettingIgnored,
   } = state;
 
   showLoading(false);
 
-  document.getElementById("environment").value = environment;
+  const environmentElt = document.getElementById("environment")
+  environmentElt.value = environment;
+  document.getElementById("environment-error").style.display = serverSettingIgnored ? "block" : "none";
+  if (serverSettingIgnored) {
+    environmentElt.setAttribute("disabled", "disabled");
+  }
+
   document.getElementById("polling-url").textContent = pollingEndpoint;
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
   document.getElementById("local-timestamp").textContent = localTimestamp;

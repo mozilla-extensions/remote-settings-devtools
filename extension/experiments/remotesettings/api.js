@@ -36,10 +36,26 @@ async function getState() {
     environment += "-preview";
   }
 
+  // Detect whether user tried to switch server, and whether it had effect or not.
+  let serverSettingIgnored = false;
+  if (Services.prefs.prefHasUserValue("services.settings.server")) {
+    const manuallySet = Services.prefs.getStringPref("services.settings.server");
+    if (manuallySet != serverURL) {
+      serverSettingIgnored = true;
+    }
+  }
+  // Same for preview mode.
+  if (Services.prefs.prefHasUserValue("services.settings.preview_enabled")) {
+    const manuallyEnabled = Services.prefs.getBoolPref("services.settings.preview_enabled");
+    if (manuallyEnabled && !previewMode) {
+      serverSettingIgnored = true;
+    }
+  }
+
   return {
-    pollingEndpoint: RemoteSettings.pollingEndpoint,
-    environment,
     ...inspected,
+    environment,
+    serverSettingIgnored,
   };
 }
 

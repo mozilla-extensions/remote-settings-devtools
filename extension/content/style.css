@@ -56,6 +56,15 @@ section {
 #settings {
   justify-self: end;
 }
+  #environment-error {
+    max-width: 300px;
+    word-break: unset;
+    display: none;
+  }
+
+    #environment-error pre {
+      margin: 0px;
+    }
 
 #action-box {
   justify-self: start;
