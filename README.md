@@ -31,7 +31,7 @@ Unsigned addons with experiments can only be loaded in Firefox Nightly and Devel
 
 1. Download [Nightly](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)
 2. Install dependencies with `npm install`
-3. Run `npx run start:macos` or `npx run start:linux`, and it will spawn a browser window with the addon installed
+3. Run `npm run start:macos` or `npm run start:linux`, and it will spawn a browser window with the addon installed
 4. Enjoy!
 
 It relies on [web-ext](https://github.com/mozilla/web-ext). Additional CLI params can be passed using `--`:
