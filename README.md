@@ -31,15 +31,16 @@ Unsigned addons with experiments can only be loaded in Firefox Nightly and Devel
 
 1. Download [Nightly](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)
 2. Install dependencies with `npm install`
-3. We'll use the `web-ext` runner, with a persistent profile:
-```bash
-npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension --firefox-profile rs-devtools --profile-create-if-missing
+3. Run `npx run start:macos` or `npx run start:linux`, and it will spawn a browser window with the addon installed
+4. Enjoy!
+
+It relies on [web-ext](https://github.com/mozilla/web-ext). Additional CLI params can be passed using `--`:
+
 ```
-4. (*first run only*) Adjust preferences in `about:config`:
-- `xpinstall.signatures.required`: `false`
-- `extensions.experiments.enabled`: `true`
-5. Reload the addon to take these prefs changes into account, in `about:debugging`
-6. Enjoy!
+npx run start:linux -- --firefox-profile rs-devtools --profile-create-if-missing --keep-profile-changes
+```
+
+More information about the temporary loaded addon can be found in `about:debugging#/runtime/this-firefox`
 
 # Release
 
