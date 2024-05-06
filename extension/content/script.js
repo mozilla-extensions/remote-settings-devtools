@@ -187,13 +187,6 @@ async function main() {
     await remotesettings.pollChanges();
   };
 
-  // Reset local polling data.
-  document.getElementById("clear-poll-data").onclick = async () => {
-    showGlobalError(null);
-    showLoading(true);
-    await remotesettings.clearPollingStatus();
-  };
-
   // Clear all data.
   document.getElementById("clear-all-data").onclick = async () => {
     showGlobalError(null);

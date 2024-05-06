@@ -11,15 +11,6 @@ html, body {
 
 body {
   margin: 40px;
-  display: grid;
-  grid-template-areas:
-      "actionbox  actionbox  settings"
-      "polling    status     status"
-      "history    status     status"
-      "empty      status     status";
-  grid-template-columns: 1fr 2fr max-content;
-  grid-gap: 10px;
-
   color: var(--in-content-text-color);
 }
 
@@ -27,11 +18,39 @@ body.loading {
   opacity: 0.5;
 }
 
-#action-box { grid-area: actionbox }
-#settings { grid-area: settings }
-#polling { grid-area: polling }
-#sync-history { grid-area: history }
-#status { grid-area: status }
+#header button {
+  display: inline-block;
+}
+
+#header fieldset {
+  display: inline-grid;
+  vertical-align: top;
+}
+
+#env-actions {
+  float: right;
+}
+
+#header fieldset dl {
+  margin: 0px;
+}
+
+#header fieldset dt {
+  margin-top: .5em;
+}
+
+#header fieldset dd {
+  margin-left: 1em;
+}
+
+#sync-history { 
+  max-height: 15em;
+  overflow: hidden;
+}
+
+#status { 
+  grid-area: status 
+}
 
 h2, h3 {
   display: inline-block;

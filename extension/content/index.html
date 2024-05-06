@@ -6,55 +6,43 @@
 </head>
 
 <body class=" loading">
-  <section id="action-box">
-    <h3>Sync actions</h3>
-    <button id="run-poll" title="Poll for changes of remote settings">Poll server</button>
-    <button id="clear-poll-data" title="Clear polling status">Clear poll data</button>
-    <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
+  <section id="header">
+    <fieldset id="#status"">
+      <legend>Status</legend>
+      <div id="polling-error" class="error"></div>
+      <dl>
+        <dt>URL</dt>
+        <dd><a id="polling-url"></a></dd>
+        <dt>Server timestamp</dt>
+        <dd id="human-server-timestamp">N/A</dd>
+        <dd id="server-timestamp">N/A</dd>
+        <dt>Local timestamp</dt>
+        <dd id="human-local-timestamp">N/A</dd>
+        <dd id="local-timestamp">N/A</dd>
+        <dt>Last check</dt>
+        <dd id="last-check">N/A</dd>
+      </dl>
+    </fieldset>
+    <fieldset id="sync-history">
+      <legend>Sync History</legend>
+      <ul></ul>
+    </fieldset>
+    <fieldset id="env-actions">
+      <legend>Environment / Actions</legend>
+      <select id="environment">
+        <option value="custom"></option>
+        <option value="prod">Prod</option>
+        <option value="prod-preview">Prod (preview)</option>
+        <option value="stage">Stage</option>
+        <option value="stage-preview">Stage (preview)</option>
+        <option value="dev">Dev</option>
+        <option value="dev-preview">Dev (preview)</option>
+        <option value="local">Local</option>
+      </select>
+      <button id="run-poll" title="Poll for changes of remote settings">Poll server</button>
+      <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
+    </fieldset>
   </section>
-
-  <section id="settings">
-    <h3>Environment</h3>
-    <select id="environment">
-      <option value="custom"></option>
-      <option value="prod">Prod</option>
-      <option value="prod-preview">Prod (preview)</option>
-      <option value="stage">Stage</option>
-      <option value="stage-preview">Stage (preview)</option>
-      <option value="dev">Dev</option>
-      <option value="dev-preview">Dev (preview)</option>
-      <option value="local">Local</option>
-    </select>
-  </section>
-
-  <section id="polling-status">
-    <h2>Status</h2>
-    <div id="polling-error" class="error"></div>
-    <dl>
-      <dt>URL</dt>
-      <dd><a id="polling-url"></a></dd>
-    </dl>
-    <dl>
-      <dt>Server timestamp</dt>
-      <dd id="human-server-timestamp">N/A</dd>
-      <dd id="server-timestamp">N/A</dd>
-    </dl>
-    <dl>
-      <dt>Local timestamp</dt>
-      <dd id="human-local-timestamp">N/A</dd>
-      <dd id="local-timestamp">N/A</dd>
-    </dl>
-    <dl>
-      <dt>Last check</dt>
-      <dd id="last-check">N/A</dd>
-    </dl>
-  </section>
-
-  <section id="sync-history">
-    <h2>Sync History</h2>
-    <ul></ul>
-  </section>
-
   <section id="status">
     <table>
       <thead>
