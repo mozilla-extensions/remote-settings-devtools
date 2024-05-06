@@ -31,7 +31,6 @@ async function getState() {
       break;
   }
 
-  // Newest versions return the `previewMode` in `inspect()`
   if (previewMode) {
     environment += "-preview";
   }
@@ -158,12 +157,8 @@ var remotesettings = class extends ExtensionAPI {
               const client = RemoteSettings(collection);
               Services.prefs.clearUserPref(client.lastCheckTimePref);
 
-              if (typeof client.openCollection == "function") {
-                await (await client.openCollection()).clear();
-              } else {
-                await client.db.clear();
-                await client.attachments.prune([]);
-              }
+              await client.db.clear();
+              await client.attachments.prune([]);
 
               refreshUI();
             } catch (e) {
