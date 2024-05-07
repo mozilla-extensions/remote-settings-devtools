@@ -11,9 +11,6 @@ This addon provides some tools to assist developers with remote settings.
 
 ![](screenshot.png)
 
-# Planned Features
-
-- Load from preview collections
 
 # Install
 
@@ -31,15 +28,16 @@ Unsigned addons with experiments can only be loaded in Firefox Nightly and Devel
 
 1. Download [Nightly](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)
 2. Install dependencies with `npm install`
-3. We'll use the `web-ext` runner, with a persistent profile:
-```bash
-npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension --firefox-profile rs-devtools --profile-create-if-missing
+3. Run `npm run start:macos` or `npm run start:linux`, and it will spawn a browser window with the addon installed
+4. Enjoy!
+
+It relies on [web-ext](https://github.com/mozilla/web-ext). Additional CLI params can be passed using `--`:
+
 ```
-4. (*first run only*) Adjust preferences in `about:config`:
-- `xpinstall.signatures.required`: `false`
-- `extensions.experiments.enabled`: `true`
-5. Reload the addon to take these prefs changes into account, in `about:debugging`
-6. Enjoy!
+npx run start:linux -- --firefox-profile rs-devtools --profile-create-if-missing --keep-profile-changes
+```
+
+More information about the temporary loaded addon can be found in `about:debugging#/runtime/this-firefox`
 
 # Release
 
@@ -50,7 +48,7 @@ npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension
 
 ### Create a new tag/release
 
-1. Bump version in `package.json`, `update.json` (has **three** version instances that need to be updated), and `extension/manifest.json`
+1. Bump version in `package.json` and `extension/manifest.json`
 2. Tag commit `git tag -a X.Y.Z` and push it `git push origin X.Y.Z`
 3. Create release with changelog on [GitHub's releases page](https://github.com/mozilla-extensions/remote-settings-devtools/releases/new)
 4. Check that `FirefoxCI` action has run for tagged commit
@@ -69,14 +67,6 @@ npx web-ext run --verbose --firefox-binary /path/to/nightly/firefox -s extension
 8. Click `Build` > `Schedule` on the new release labeled `remote-settings-devtools-X.Y.Z-build1`
 9. Submit a [sign off request](https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=FDPDT&title=Mozilla+Add-on+Review+Requests+Intake)
 
-### Download signed binary from Taskcluster
+The binary will be published in the [releases page](https://github.com/mozilla-extensions/remote-settings-devtools/releases) automatically.
 
-1. Go to [XPI Releases](https://shipit.mozilla-releng.net/xpi)
-2. Click on `Promote task` on the XPI release you want to download the signed binary from, which will take you to Taskcluster
-3. Click on the `release-signing-remote-settings-devtools` task
-4. Click the `Artifacts` dropdown on the right side of the page
-5. Download the artifact named `public/build/remote-settings-devtools.xpi` to your machine
-6. Append `-X.Y.Z` to the end of the filename
-7. Attach `remote-settings-devtools-X.Y.Z.xpi` signed binary file to the corresponding GitHub release
-
-Additional information may be found [here](https://github.com/mozilla-extensions/xpi-manifest/blob/master/docs/releasing-a-xpi.md#kicking-off-the-release).
+10. Update the `update.json` file to reflect the `version` value assigned by Taskcluster (eg. `1.9.0buildid20240422.103808`) and the download URL for the XPI file.
