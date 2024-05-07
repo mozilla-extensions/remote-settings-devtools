@@ -7,7 +7,22 @@
 
 <body class=" loading">
   <section id="header">
-    <fieldset id="#status"">
+    <fieldset id="env-actions">
+      <legend>Environment / Actions</legend>
+      <select id="environment">
+        <option value="custom"></option>
+        <option value="prod">Prod</option>
+        <option value="prod-preview">Prod (preview)</option>
+        <option value="stage">Stage</option>
+        <option value="stage-preview">Stage (preview)</option>
+        <option value="dev">Dev</option>
+        <option value="dev-preview">Dev (preview)</option>
+        <option value="local">Local</option>
+      </select>
+      <button id="run-poll" title="Poll for changes of remote settings">Poll server</button>
+      <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
+    </fieldset>
+    <fieldset id="header-status"">
       <legend>Status</legend>
       <div id="polling-error" class="error"></div>
       <dl>
@@ -26,21 +41,6 @@
     <fieldset id="sync-history">
       <legend>Sync History</legend>
       <ul></ul>
-    </fieldset>
-    <fieldset id="env-actions">
-      <legend>Environment / Actions</legend>
-      <select id="environment">
-        <option value="custom"></option>
-        <option value="prod">Prod</option>
-        <option value="prod-preview">Prod (preview)</option>
-        <option value="stage">Stage</option>
-        <option value="stage-preview">Stage (preview)</option>
-        <option value="dev">Dev</option>
-        <option value="dev-preview">Dev (preview)</option>
-        <option value="local">Local</option>
-      </select>
-      <button id="run-poll" title="Poll for changes of remote settings">Poll server</button>
-      <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
     </fieldset>
   </section>
   <section id="status">
@@ -76,8 +76,8 @@
       <span class="local-timestamp"></span>
     </td>
     <td class="actions">
-      <button class="sync">Force sync</button>
-      <button class="clear-data">Clear local data</button>
+      <button class="sync action" title="Force sync"><img src="./refresh.svg" width="28px" height="28px" /></button>
+      <button class="clear-data action" title="Clear local data"><img src="./delete.svg" width="28px" height="28px" /></button>
     </td>
   </tr>
 </template>

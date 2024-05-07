@@ -22,8 +22,8 @@
   },
 
   "icons": {
-    "48": "icon.png",
-    "96": "icon.png"
+    "48": "icon.svg",
+    "96": "icon.svg"
   },
 
   "browser_action": {
