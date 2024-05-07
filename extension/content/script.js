@@ -116,7 +116,7 @@ async function refreshUI(state) {
       localTimestamp,
       serverTimestamp,
     } = status;
-    const url = `${serverURL}/buckets/${bucket}/collections/${collection}/records`;
+    const url = `${serverURL}/buckets/${bucket}/collections/${collection}/changeset?_expected=${serverTimestamp}`;
     const identifier = `${bucket}/${collection}`;
 
     const tableRowId = `status-${identifier}`;
