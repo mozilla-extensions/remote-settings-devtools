@@ -25,16 +25,18 @@ body.loading {
 
 #header button {
   display: block;
+  width: 91%;
+  margin: 4px 8px;
 }
 
 fieldset {
-  display: inline-grid;
+  display: inline-block;
   vertical-align: top;
 }
 
 #sync-history { 
   max-height: 15em;
-  overflow: hidden;
+  overflow-y: scroll;
 }
 
 button.sync {
@@ -52,6 +54,7 @@ button.action {
   min-width: 28px;
   background-size: 28px;
   margin-right: 5px;
+  cursor: pointer;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -71,7 +74,9 @@ dt {
 }
 
 dl {
-  margin: 0px;
+  margin: 0 2em 0 0;
+  width: max-content;
+  display: inline-block;
 }
 
 dd {
