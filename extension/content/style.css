@@ -10,8 +10,13 @@ html, body {
 }
 
 body {
-  margin: 40px;
   color: var(--in-content-text-color);
+}
+
+@media(min-width: 1000px) {
+  body {
+    margin: 40px;
+  }
 }
 
 body.loading {
@@ -19,7 +24,7 @@ body.loading {
 }
 
 #header button {
-  display: inline-block;
+  display: block;
 }
 
 fieldset {
@@ -32,15 +37,27 @@ fieldset {
   overflow: hidden;
 }
 
-#status { 
-  grid-area: status 
+button.sync {
+  background: url('download.svg') no-repeat;
 }
 
-.action {
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  line-height: 1;
+button.clear-data {
+  background: url('broom.svg') no-repeat;
+}
+
+button.action {
+  content: ' ';
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background-size: 28px;
+  margin-right: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  button.action {
+    filter: invert(1);
+  }
 }
 
 h2, h3 {
@@ -75,6 +92,15 @@ section {
 #settings {
   justify-self: end;
 }
+#environment-error {
+  max-width: 300px;
+  word-break: unset;
+  display: none;
+}
+
+#environment-error pre {
+  margin: 0px;
+}
 
 #action-box {
   justify-self: start;
@@ -82,13 +108,23 @@ section {
 
 #status table {
   width: 100%;
+  min-width: 860px;
   text-align: center;
 }
 #status table th {
   white-space: nowrap;
+  min-width: 6em;
 }
 #status table td:first-child, #status table th:first-child {
   text-align: left
+}
+
+table {
+  border-collapse: collapse; 
+}
+
+tr:not(:first-child) {
+  border-top: 1px solid #757575;
 }
 
 .collection-status.loading {

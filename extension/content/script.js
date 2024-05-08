@@ -68,12 +68,19 @@ async function refreshUI(state) {
     pollingEndpoint,
     environment,
     history,
+    serverSettingIgnored,
   } = state;
 
   showLoading(false);
 
-  document.getElementById("environment").value = environment;
-  document.getElementById("polling-url").textContent = pollingEndpoint;
+  const environmentElt = document.getElementById("environment")
+  environmentElt.value = environment;
+  document.getElementById("environment-error").style.display = serverSettingIgnored ? "block" : "none";
+  if (serverSettingIgnored) {
+    environmentElt.setAttribute("disabled", "disabled");
+  }
+
+  document.getElementById("polling-url").textContent = new URL("https://firefox.settings.services.allizom.org/v1/buckets/monitor/collections/changes/changeset").origin;
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
   document.getElementById("local-timestamp").textContent = localTimestamp;
   document.getElementById("server-timestamp").textContent = serverTimestamp;
@@ -116,6 +123,7 @@ async function refreshUI(state) {
       localTimestamp,
       serverTimestamp,
     } = status;
+    console.log(status);
     const url = `${serverURL}/buckets/${bucket}/collections/${collection}/changeset?_expected=${serverTimestamp}`;
     const identifier = `${bucket}/${collection}`;
 
@@ -138,12 +146,16 @@ async function refreshUI(state) {
       lastCheck * 1000,
     );
 
-    tableRow.querySelector(".clear-data").onclick = async () => {
+    tableRow.querySelector("button.clear-data").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
+      console.log(bucket);
+      console.log(collection);
       await remotesettings.deleteLocal(bucket, collection);
     };
-    tableRow.querySelector(".sync").onclick = async () => {
+    tableRow.querySelector("button.sync").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
+      console.log(bucket);
+      console.log(collection);
       await remotesettings.forceSync(bucket, collection);
     };
     statusTable.appendChild(tableRow);

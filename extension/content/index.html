@@ -8,7 +8,7 @@
 <body class=" loading">
   <section id="header">
     <fieldset id="env-actions">
-      <legend>Environment / Actions</legend>
+      <legend>Environment</legend>
       <select id="environment">
         <option value="custom"></option>
         <option value="prod">Prod</option>
@@ -19,8 +19,9 @@
         <option value="dev-preview">Dev (preview)</option>
         <option value="local">Local</option>
       </select>
-      <button id="run-poll" title="Poll for changes of remote settings">Poll server</button>
-      <button id="clear-all-data" title="Clear every local data">Clear ALL local data</button>
+      <button id="run-poll" title="Poll for changes of remote settings">Sync</button>
+      <button id="clear-all-data" title="Clear every local data">Clear all</button>
+      <div id="environment-error" class="error">⚠️ Environment cannot be changed. Try running Firefox with environment variable <pre>MOZ_REMOTE_SETTINGS_DEVTOOLS=1</pre></div>
     </fieldset>
     <fieldset id="header-status"">
       <legend>Status</legend>
@@ -76,8 +77,8 @@
       <span class="local-timestamp"></span>
     </td>
     <td class="actions">
-      <button class="sync action" title="Force sync"><img src="./refresh.svg" width="28px" height="28px" /></button>
-      <button class="clear-data action" title="Clear local data"><img src="./delete.svg" width="28px" height="28px" /></button>
+      <button class="sync action" title="Force sync"></button>
+      <button class="clear-data action" title="Clear local data"></button>
     </td>
   </tr>
 </template>
