@@ -80,7 +80,7 @@ async function refreshUI(state) {
     environmentElt.setAttribute("disabled", "disabled");
   }
 
-  document.getElementById("polling-url").textContent = new URL("https://firefox.settings.services.allizom.org/v1/buckets/monitor/collections/changes/changeset").origin;
+  document.getElementById("polling-url").textContent = new URL(pollingEndpoint).origin;
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
   document.getElementById("local-timestamp").textContent = localTimestamp;
   document.getElementById("server-timestamp").textContent = serverTimestamp;
@@ -123,7 +123,6 @@ async function refreshUI(state) {
       localTimestamp,
       serverTimestamp,
     } = status;
-    console.log(status);
     const url = `${serverURL}/buckets/${bucket}/collections/${collection}/changeset?_expected=${serverTimestamp}`;
     const identifier = `${bucket}/${collection}`;
 
@@ -148,14 +147,10 @@ async function refreshUI(state) {
 
     tableRow.querySelector("button.clear-data").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
-      console.log(bucket);
-      console.log(collection);
       await remotesettings.deleteLocal(bucket, collection);
     };
     tableRow.querySelector("button.sync").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
-      console.log(bucket);
-      console.log(collection);
       await remotesettings.forceSync(bucket, collection);
     };
     statusTable.appendChild(tableRow);

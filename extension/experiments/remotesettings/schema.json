@@ -31,13 +31,6 @@
         ]
       },
       {
-        "name": "clearPollingStatus",
-        "type": "function",
-        "description": "Clears polling status",
-        "async": true,
-        "parameters": []
-      },
-      {
         "name": "deleteLocal",
         "type": "function",
         "description": "Deletes the local records of the specified bucket/collection",

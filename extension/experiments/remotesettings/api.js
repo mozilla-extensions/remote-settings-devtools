@@ -148,23 +148,6 @@ var remotesettings = class extends ExtensionAPI {
           },
 
           /**
-           * clearPollingStatus() resets the local preferences about the global polling status.
-           * It will simulate a profile that has never been synchronized.
-           */
-          async clearPollingStatus() {
-            Services.prefs.clearUserPref(
-              "services.settings.last_update_seconds",
-            );
-            Services.prefs.clearUserPref("services.settings.last_etag");
-            Services.prefs.clearUserPref(
-              "services.settings.clock_skew_seconds",
-            );
-            Services.prefs.clearUserPref("services.settings.server.backoff");
-
-            refreshUI();
-          },
-
-          /**
            * deleteLocal() deletes the local records of the specified collection.
            * @param {String} collection collection name
            */
