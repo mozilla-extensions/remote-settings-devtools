@@ -33,14 +33,9 @@
       {
         "name": "deleteLocal",
         "type": "function",
-        "description": "Deletes the local records of the specified bucket/collection",
+        "description": "Deletes the local records of the specified collection",
         "async": true,
         "parameters": [
-          {
-            "name": "bucket",
-            "type": "string",
-            "description": "bucket name, likely 'main'"
-          },
           {
             "name": "collection",
             "type": "string",
@@ -51,14 +46,9 @@
       {
         "name": "forceSync",
         "type": "function",
-        "description": "Triggers a synchronization at the level only for the specified bucket/collection",
+        "description": "Triggers a synchronization at the level only for the specified collection",
         "async": true,
         "parameters": [
-          {
-            "name": "bucket",
-            "type": "string",
-            "description": "bucket name, likely main"
-          },
           {
             "name": "collection",
             "type": "string",

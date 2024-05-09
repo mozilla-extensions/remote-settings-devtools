@@ -147,11 +147,11 @@ async function refreshUI(state) {
 
     tableRow.querySelector("button.clear-data").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
-      await remotesettings.deleteLocal(bucket, collection);
+      await remotesettings.deleteLocal(collection);
     };
     tableRow.querySelector("button.sync").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
-      await remotesettings.forceSync(bucket, collection);
+      await remotesettings.forceSync(collection);
     };
     statusTable.appendChild(tableRow);
   });
