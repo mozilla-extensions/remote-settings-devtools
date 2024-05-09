@@ -10,28 +10,74 @@ html, body {
 }
 
 body {
-  margin: 40px;
-  display: grid;
-  grid-template-areas:
-      "actionbox  actionbox  settings"
-      "polling    status     status"
-      "history    status     status"
-      "empty      status     status";
-  grid-template-columns: 1fr 2fr max-content;
-  grid-gap: 10px;
-
   color: var(--in-content-text-color);
+}
+
+@media(min-width: 1000px) {
+  body {
+    margin: 40px;
+  }
 }
 
 body.loading {
   opacity: 0.5;
 }
 
-#action-box { grid-area: actionbox }
-#settings { grid-area: settings }
-#polling { grid-area: polling }
-#sync-history { grid-area: history }
-#status { grid-area: status }
+#header button {
+  display: block;
+  width: 91%;
+  margin: 4px 8px;
+}
+
+fieldset {
+  display: inline-block;
+  vertical-align: top;
+}
+
+#header section {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  border-radius: 4px;
+}
+
+#header section h2 {
+  position: absolute;
+  font-size: medium;
+  top: -0.5em;
+  background-color: var(--in-content-box-background);
+  padding: 0 .3em;
+}
+
+#sync-history > ul { 
+  max-height: 12em;
+  overflow-y: scroll;
+  margin: 0;
+}
+
+button.sync {
+  background: url('download.svg') no-repeat;
+}
+
+button.clear-data {
+  background: url('broom.svg') no-repeat;
+}
+
+button.action {
+  content: ' ';
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background-size: 28px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: dark) {
+  button.action {
+    filter: invert(1);
+  }
+}
 
 h2, h3 {
   display: inline-block;
@@ -39,7 +85,18 @@ h2, h3 {
 }
 
 dt {
+  margin-top: .5em;
   font-weight: bold;
+}
+
+dl {
+  margin: 0 2em 0 0;
+  width: max-content;
+  display: inline-block;
+}
+
+dd {
+  margin-left: 1em;
 }
 
 .error {
@@ -56,15 +113,15 @@ section {
 #settings {
   justify-self: end;
 }
-  #environment-error {
-    max-width: 300px;
-    word-break: unset;
-    display: none;
-  }
+#environment-error {
+  max-width: 300px;
+  word-break: unset;
+  display: none;
+}
 
-    #environment-error pre {
-      margin: 0px;
-    }
+#environment-error pre {
+  margin: 0px;
+}
 
 #action-box {
   justify-self: start;
@@ -72,13 +129,23 @@ section {
 
 #status table {
   width: 100%;
+  min-width: 860px;
   text-align: center;
 }
 #status table th {
   white-space: nowrap;
+  min-width: 6em;
 }
 #status table td:first-child, #status table th:first-child {
   text-align: left
+}
+
+table {
+  border-collapse: collapse; 
+}
+
+tr:not(:first-child) {
+  border-top: 1px solid #757575;
 }
 
 .collection-status.loading {
@@ -113,16 +180,10 @@ section {
   margin: 10px;
 }
 
-#sync-history .status {
-  padding: 3px;
-  margin: 3px;
-  border-radius: 4px;
+#sync-history .status.success {
+  background-color: var(--success-text-color);
 }
 
-  #sync-history .status.success {
-    background-color: var(--success-text-color);
-  }
-
-  #sync-history .status:not(.success) {
-    background-color: var(--error-text-color);
-  }
+#sync-history .status:not(.success) {
+  background-color: var(--error-text-color);
+}

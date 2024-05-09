@@ -80,7 +80,7 @@ async function refreshUI(state) {
     environmentElt.setAttribute("disabled", "disabled");
   }
 
-  document.getElementById("polling-url").textContent = pollingEndpoint;
+  document.getElementById("polling-url").textContent = new URL(pollingEndpoint).origin;
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
   document.getElementById("local-timestamp").textContent = localTimestamp;
   document.getElementById("server-timestamp").textContent = serverTimestamp;
@@ -145,11 +145,11 @@ async function refreshUI(state) {
       lastCheck * 1000,
     );
 
-    tableRow.querySelector(".clear-data").onclick = async () => {
+    tableRow.querySelector("button.clear-data").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
       await remotesettings.deleteLocal(bucket, collection);
     };
-    tableRow.querySelector(".sync").onclick = async () => {
+    tableRow.querySelector("button.sync").onclick = async () => {
       document.getElementById(tableRowId).className += " loading";
       await remotesettings.forceSync(bucket, collection);
     };
@@ -192,13 +192,6 @@ async function main() {
     showGlobalError(null);
     showLoading(true);
     await remotesettings.pollChanges();
-  };
-
-  // Reset local polling data.
-  document.getElementById("clear-poll-data").onclick = async () => {
-    showGlobalError(null);
-    showLoading(true);
-    await remotesettings.clearPollingStatus();
   };
 
   // Clear all data.
