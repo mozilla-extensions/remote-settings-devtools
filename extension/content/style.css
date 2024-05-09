@@ -34,9 +34,25 @@ fieldset {
   vertical-align: top;
 }
 
-#sync-history { 
-  max-height: 15em;
+#header section {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  border-radius: 4px;
+}
+
+#header section h2 {
+  position: absolute;
+  font-size: medium;
+  top: -0.5em;
+  background-color: var(--in-content-box-background);
+  padding: 0 .3em;
+}
+
+#sync-history > ul { 
+  max-height: 12em;
   overflow-y: scroll;
+  margin: 0;
 }
 
 button.sync {
@@ -162,12 +178,6 @@ tr:not(:first-child) {
 
 #sync-history li {
   margin: 10px;
-}
-
-#sync-history .status {
-  padding: 3px;
-  margin: 3px;
-  border-radius: 4px;
 }
 
 #sync-history .status.success {

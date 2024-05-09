@@ -7,8 +7,8 @@
 
 <body class=" loading">
   <section id="header">
-    <fieldset id="env-actions">
-      <legend>Environment</legend>
+    <section id="env-actions">
+      <h2>Environment</h2>
       <select id="environment">
         <option value="custom"></option>
         <option value="prod">Prod</option>
@@ -22,9 +22,9 @@
       <button id="run-poll" title="Poll for changes of remote settings">Sync</button>
       <button id="clear-all-data" title="Clear every local data">Clear all</button>
       <div id="environment-error" class="error">⚠️ Environment cannot be changed. Try running Firefox with environment variable <pre>MOZ_REMOTE_SETTINGS_DEVTOOLS=1</pre></div>
-    </fieldset>
-    <fieldset id="header-status"">
-      <legend>Status</legend>
+    </section>
+    <section id="header-status"">
+      <h2>Status</h2>
       <div id="polling-error" class="error"></div>
       <dl>
         <dt>URL</dt>
@@ -40,11 +40,11 @@
         <dt>Last check</dt>
         <dd id="last-check">N/A</dd>
       </dl>
-    </fieldset>
-    <fieldset id="sync-history">
-      <legend>Sync History</legend>
+    </section>
+    <section id="sync-history">
+      <h2>Sync History</h2>
       <ul></ul>
-    </fieldset>
+    </section>
   </section>
   <section id="status">
     <table>
