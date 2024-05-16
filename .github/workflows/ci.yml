@@ -9,14 +9,14 @@ name: CI
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      TEST_TAG: user/app:test
     steps:
       - uses: actions/checkout@v4
 
       - name: Build container
         uses: docker/build-push-action@v5
         with:
-          cache-from: type=local,src=${{ env.DOCKER_CACHE}}
-          cache-to: type=local,dest=${{ env.DOCKER_CACHE}},mode=max
           tags: ${{ env.TEST_TAG }}
           file: Dockerfile
           load: true
