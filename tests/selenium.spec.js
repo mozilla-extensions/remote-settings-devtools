@@ -12,7 +12,7 @@ beforeAll(async() => {
   profile.addExtension(xpiPath, (err, details) => { });
 
   const options = new Options(profile.path());
-  options.setBinary("/usr/bin/firefox-nightly");
+  options.setBinary(process.env.NIGHTLY_PATH || "/usr/bin/firefox-nightly");
   options.addArguments("--pref 'extensions.experiments.enabled=true'");
   options.addArguments("--headless");
   options.setPreference("xpinstall.signatures.required", false);

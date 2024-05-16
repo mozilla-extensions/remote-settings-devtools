@@ -12,23 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Build container
+        uses: docker/build-push-action@v5
         with:
-          node-version-file: 'package.json'
-          cache: 'npm'
+          cache-from: type=local,src=${{ env.DOCKER_CACHE}}
+          cache-to: type=local,dest=${{ env.DOCKER_CACHE}},mode=max
+          tags: ${{ env.TEST_TAG }}
+          file: Dockerfile
+          load: true
+          context: .
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: 'package.json'
-          cache: 'npm'
-
-      - name: Print environment
+      - name: Run container
         run: |
-          node --version
-          npm --version
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm run test
+          docker run --rm ${{ env.TEST_TAG }} && sleep 5
