@@ -12,15 +12,15 @@ beforeAll(async() => {
   profile.addExtension(xpiPath, (err, details) => { });
 
   const options = new Options(profile.path());
-
   options.setBinary("/usr/bin/firefox-nightly");
   options.addArguments("--pref 'extensions.experiments.enabled=true'");
+  options.addArguments("--headless");
   options.setPreference("xpinstall.signatures.required", false);
   options.setPreference("extensions.experiments.enabled", true);
   options.setPreference("extensions.webextensions.uuids", JSON.stringify({
     "remote-settings-devtools@mozilla.com": testExtId
   }));
-  
+
   driver = await new Builder()
     .forBrowser(Browser.FIREFOX)
     .setFirefoxOptions(options)
@@ -28,8 +28,6 @@ beforeAll(async() => {
 
   await driver.installAddon(xpiPath);
   await driver.get(`moz-extension://${testExtId}/content/index.html`);
-  // let element = await driver.findElement(By.css('body'));
-  (await driver.findElements(By.css('#status tr')))
 });
 
 
