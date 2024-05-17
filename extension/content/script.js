@@ -26,7 +26,7 @@ function showLoading(state) {
   } else {
     document
       .querySelectorAll(".loading")
-      .forEach(el => (el.className = el.className.replace(" loading", "")));
+      .forEach((el) => (el.className = el.className.replace(" loading", "")));
   }
 }
 
@@ -73,25 +73,26 @@ async function refreshUI(state) {
 
   showLoading(false);
 
-  const environmentElt = document.getElementById("environment")
+  const environmentElt = document.getElementById("environment");
   environmentElt.value = environment;
-  document.getElementById("environment-error").style.display = serverSettingIgnored ? "block" : "none";
+  document.getElementById("environment-error").style.display =
+    serverSettingIgnored ? "block" : "none";
   if (serverSettingIgnored) {
     environmentElt.setAttribute("disabled", "disabled");
   }
 
-  document.getElementById("polling-url").textContent = new URL(pollingEndpoint).origin;
+  document.getElementById("polling-url").textContent = new URL(
+    pollingEndpoint,
+  ).origin;
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
   document.getElementById("local-timestamp").textContent = localTimestamp;
   document.getElementById("server-timestamp").textContent = serverTimestamp;
   document.getElementById("human-local-timestamp").className =
     localTimestamp == serverTimestamp ? " up-to-date" : " unsync";
-  document.getElementById("human-local-timestamp").textContent = humanDate(
-    localTimestamp,
-  );
-  document.getElementById("human-server-timestamp").textContent = humanDate(
-    serverTimestamp,
-  );
+  document.getElementById("human-local-timestamp").textContent =
+    humanDate(localTimestamp);
+  document.getElementById("human-server-timestamp").textContent =
+    humanDate(serverTimestamp);
   document.getElementById("last-check").textContent = humanDate(
     lastCheck * 1000,
   );
@@ -100,7 +101,7 @@ async function refreshUI(state) {
   const historyTpl = document.getElementById("sync-history-entry-tpl");
   const historyList = document.querySelector("#sync-history > ul");
   historyList.innerHTML = "";
-  history["settings-sync"].forEach(entry => {
+  history["settings-sync"].forEach((entry) => {
     const entryRow = historyTpl.content.cloneNode(true);
     entryRow.querySelector(".datetime").textContent = humanDate(
       entry.timestamp,
@@ -115,14 +116,9 @@ async function refreshUI(state) {
   const statusTable = document.querySelector("#status table tbody");
 
   statusTable.innerHTML = "";
-  collections.forEach(status => {
-    const {
-      bucket,
-      collection,
-      lastCheck,
-      localTimestamp,
-      serverTimestamp,
-    } = status;
+  collections.forEach((status) => {
+    const { bucket, collection, lastCheck, localTimestamp, serverTimestamp } =
+      status;
     const url = `${serverURL}/buckets/${bucket}/collections/${collection}/changeset?_expected=${serverTimestamp}`;
     const identifier = `${bucket}/${collection}`;
 
@@ -131,15 +127,13 @@ async function refreshUI(state) {
     tableRow.querySelector("tr").setAttribute("id", tableRowId);
     tableRow.querySelector(".url").textContent = identifier;
     tableRow.querySelector(".url").setAttribute("href", url);
-    tableRow.querySelector(".human-server-timestamp").textContent = humanDate(
-      serverTimestamp,
-    );
+    tableRow.querySelector(".human-server-timestamp").textContent =
+      humanDate(serverTimestamp);
     tableRow.querySelector(".server-timestamp").textContent = serverTimestamp;
     tableRow.querySelector(".human-local-timestamp").className +=
       localTimestamp == serverTimestamp ? " up-to-date" : " unsync";
-    tableRow.querySelector(".human-local-timestamp").textContent = humanDate(
-      localTimestamp,
-    );
+    tableRow.querySelector(".human-local-timestamp").textContent =
+      humanDate(localTimestamp);
     tableRow.querySelector(".local-timestamp").textContent = localTimestamp;
     tableRow.querySelector(".last-check").textContent = humanDate(
       lastCheck * 1000,
@@ -161,13 +155,13 @@ async function main() {
   // Load the UI in the background.
   remotesettings
     .getState()
-    .then(data => {
+    .then((data) => {
       showLoading(false);
       refreshUI(data);
     })
     .catch(showGlobalError);
 
-  remotesettings.onStateChanged.addListener(data => {
+  remotesettings.onStateChanged.addListener((data) => {
     showLoading(false);
     try {
       refreshUI(JSON.parse(data));
@@ -175,13 +169,13 @@ async function main() {
       showGlobalError(e);
     }
   });
-  remotesettings.onGlobalError.addListener(error => showGlobalError(error));
-  remotesettings.onSyncError.addListener(data => {
+  remotesettings.onGlobalError.addListener((error) => showGlobalError(error));
+  remotesettings.onSyncError.addListener((data) => {
     const { bucket, collection, error } = JSON.parse(data);
     showSyncError(bucket, collection, error);
   });
 
-  document.getElementById("environment").onchange = async event => {
+  document.getElementById("environment").onchange = async (event) => {
     showGlobalError(null);
     showLoading(true);
     await remotesettings.switchEnvironment(event.target.value);

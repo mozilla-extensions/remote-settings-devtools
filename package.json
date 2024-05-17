@@ -10,6 +10,8 @@
     "build:extension": "npx web-ext build -s ./extension/ --overwrite-dest",
     "build:finalize": "mv web-ext-artifacts/*.zip web-ext-artifacts/remote-settings-devtools.xpi",
     "clean": "npx rimraf web-ext-artifacts",
+    "cs-check": "prettier -l \"{extension,tests}/**/*.{js,jsx,ts,tsx}\"",
+    "cs-format": "prettier \"{extension,tests}/**/*.{js,jsx,ts,tsx}\" --write",
     "lint": "npm run lint:eslint",
     "lint:eslint": "npx eslint --ignore-pattern '!.eslintrc.js' --ignore-pattern '!.prettierrc.js' .eslintrc.js .prettierrc.js extension",
     "lint:fix": "npm run lint:eslint -- --fix",

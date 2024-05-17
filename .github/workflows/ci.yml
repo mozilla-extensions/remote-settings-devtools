@@ -7,6 +7,31 @@ on:
 
 name: CI
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
+          cache: 'npm'
+
+      - name: Print environment
+        run: |
+          node --version
+          npm --version
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Code Style
+        run: npm run cs-check
+
+      - name: Lint
+        run: npm run lint   
+
+
   test:
     runs-on: ubuntu-latest
     env:
