@@ -18,4 +18,4 @@ RUN npm ci
 
 ENV NIGHTLY_PATH="/opt/firefox/firefox"
 
-CMD npm run test
+CMD npm run test:local

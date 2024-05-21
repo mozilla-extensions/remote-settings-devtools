@@ -17,7 +17,7 @@
     "lint:fix": "npm run lint:eslint -- --fix",
     "start:linux": "web-ext run --verbose --source-dir ./extension/ --firefox-binary /usr/bin/firefox-nightly --pref 'extensions.experiments.enabled=true'",
     "start:macos": "web-ext run --verbose --source-dir ./extension/ --firefox-binary '/Applications/Firefox Nightly.app/Contents/MacOS/firefox' --pref 'extensions.experiments.enabled=true'",
-    "test": "npm-run-all clean build:* && jest --testTimeout=30000",
+    "test:local": "npm-run-all clean build:* && jest --testTimeout=30000",
     "test:docker": "docker build . -t addon-test:latest && docker run --rm -it addon-test:latest"
   },
   "devDependencies": {
