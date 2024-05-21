@@ -39,6 +39,12 @@ npx run start:linux -- --firefox-profile rs-devtools --profile-create-if-missing
 
 More information about the temporary loaded addon can be found in `about:debugging#/runtime/this-firefox`
 
+## Running tests locally
+Automated tests can be run locally or in docker to verify changes.
+ - `npm run tcs:docker` - will build and run the automated tests within a container using the latest firefox nightly package.
+ - `npm run tcs:test` to run automated tests locally using your firefox nightly package.
+   - Setting the `NIGHTLY_PATH` environment parameter will allow you to run tests against an arbitrary firefox nightly binary. Ex: `NIGHTLY_PATH=/opt/custom/nightly npm run tcs:test`
+
 # Release
 
 ### Prerequisites (get access to Ship-It)
