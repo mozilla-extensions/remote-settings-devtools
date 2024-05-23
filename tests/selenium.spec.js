@@ -76,9 +76,15 @@ async function waitForLoad() {
     debounceValue = 0;
   do {
     await driver.sleep(busyWait);
-    hasLoadingElements = !!(await driver.findElements(By.css(".loading"))).length;
-    debounceValue = Number(await driver.findElement(By.id("hdnLastLoad")).getAttribute('value'));
-  } while (hasLoadingElements || debounceValue + busyWait > new Date().getTime());
+    hasLoadingElements = !!(await driver.findElements(By.css(".loading")))
+      .length;
+    debounceValue = Number(
+      await driver.findElement(By.id("hdnLastLoad")).getAttribute("value"),
+    );
+  } while (
+    hasLoadingElements ||
+    debounceValue + busyWait > new Date().getTime()
+  );
 }
 
 // making this a little easier to read in tests
@@ -107,7 +113,9 @@ describe("End to end browser tests", () => {
     await waitForLoad();
 
     // verify data as sync'd as expected
-    expect((await driver.findElements(By.css("#status .unsync"))).length).toBeLessThan(
+    expect(
+      (await driver.findElements(By.css("#status .unsync"))).length,
+    ).toBeLessThan(
       4, // allowing for a few collections to fail due to networking issues in automated test
     );
     expect(
