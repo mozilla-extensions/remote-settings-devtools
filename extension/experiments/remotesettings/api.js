@@ -38,14 +38,18 @@ async function getState() {
   // Detect whether user tried to switch server, and whether it had effect or not.
   let serverSettingIgnored = false;
   if (Services.prefs.prefHasUserValue("services.settings.server")) {
-    const manuallySet = Services.prefs.getStringPref("services.settings.server");
+    const manuallySet = Services.prefs.getStringPref(
+      "services.settings.server",
+    );
     if (manuallySet != serverURL) {
       serverSettingIgnored = true;
     }
   }
   // Same for preview mode.
   if (Services.prefs.prefHasUserValue("services.settings.preview_enabled")) {
-    const manuallyEnabled = Services.prefs.getBoolPref("services.settings.preview_enabled");
+    const manuallyEnabled = Services.prefs.getBoolPref(
+      "services.settings.preview_enabled",
+    );
     if (manuallyEnabled && !previewMode) {
       serverSettingIgnored = true;
     }
@@ -142,7 +146,10 @@ var remotesettings = class extends ExtensionAPI {
             const previewMode = env.includes("-preview");
             RemoteSettings.enablePreviewMode(previewMode);
             // Set pref to persist change across restarts.
-            Services.prefs.setBoolPref("services.settings.preview_enabled", previewMode);
+            Services.prefs.setBoolPref(
+              "services.settings.preview_enabled",
+              previewMode,
+            );
 
             refreshUI();
           },
@@ -200,7 +207,7 @@ var remotesettings = class extends ExtensionAPI {
           onStateChanged: new EventManager({
             context,
             name: "remotesettings.onStateChanged",
-            register: fire => {
+            register: (fire) => {
               const observer = async () => {
                 const state = await getState();
                 fire.async(JSON.stringify(state));
@@ -229,7 +236,7 @@ var remotesettings = class extends ExtensionAPI {
           onGlobalError: new EventManager({
             context,
             name: "remotesettings.onGlobalError",
-            register: fire => {
+            register: (fire) => {
               const observer = (subject, topic, data) => {
                 fire.async(data);
               };
@@ -245,7 +252,7 @@ var remotesettings = class extends ExtensionAPI {
           onSyncError: new EventManager({
             context,
             name: "remotesettings.onSyncError",
-            register: fire => {
+            register: (fire) => {
               const observer = (subject, topic, data) => {
                 fire.async(data);
               };

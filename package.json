@@ -10,11 +10,15 @@
     "build:extension": "npx web-ext build -s ./extension/ --overwrite-dest",
     "build:finalize": "mv web-ext-artifacts/*.zip web-ext-artifacts/remote-settings-devtools.xpi",
     "clean": "npx rimraf web-ext-artifacts",
+    "cs-check": "prettier -l \"{extension,tests}/**/*.{js,jsx,ts,tsx}\"",
+    "cs-format": "prettier \"{extension,tests}/**/*.{js,jsx,ts,tsx}\" --write",
     "lint": "npm run lint:eslint",
     "lint:eslint": "npx eslint --ignore-pattern '!.eslintrc.js' --ignore-pattern '!.prettierrc.js' .eslintrc.js .prettierrc.js extension",
     "lint:fix": "npm run lint:eslint -- --fix",
     "start:linux": "web-ext run --verbose --source-dir ./extension/ --firefox-binary /usr/bin/firefox-nightly --pref 'extensions.experiments.enabled=true'",
-    "start:macos": "web-ext run --verbose --source-dir ./extension/ --firefox-binary '/Applications/Firefox Nightly.app/Contents/MacOS/firefox' --pref 'extensions.experiments.enabled=true'"
+    "start:macos": "web-ext run --verbose --source-dir ./extension/ --firefox-binary '/Applications/Firefox Nightly.app/Contents/MacOS/firefox' --pref 'extensions.experiments.enabled=true'",
+    "tcs:test": "npm-run-all clean build:* && jest --testTimeout=30000",
+    "tcs:docker": "docker build . -t addon-test:latest && docker run --rm -it addon-test:latest"
   },
   "devDependencies": {
     "eslint": "8.57.0",
@@ -23,9 +27,11 @@
     "eslint-plugin-html": "8.1.1",
     "eslint-plugin-mozilla": "3.7.3",
     "eslint-plugin-no-unsanitized": "4.0.2",
+    "jest": "^29.7.0",
     "npm-run-all2": "6.1.2",
     "prettier": "3.2.5",
     "rimraf": "5.0.7",
+    "selenium-webdriver": "^4.20.0",
     "web-ext": "7.11.0"
   }
 }
