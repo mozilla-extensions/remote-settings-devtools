@@ -172,9 +172,10 @@ button.clear-data {
 }
 
 #sync-history > ul {
-  max-height: 12em;
+  max-height: 7em;
   overflow-y: scroll;
   margin: 0;
+  padding-left: 10px;
 }
 
 #sync-history li {
