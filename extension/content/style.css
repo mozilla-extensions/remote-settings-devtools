@@ -59,7 +59,7 @@ section {
   margin-bottom: 10px;
 }
 
-#header button {
+#env-actions button, #env-actions select {
   display: block;
   width: 91%;
   margin: 4px 8px;
