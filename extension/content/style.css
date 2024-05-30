@@ -98,6 +98,10 @@ section {
   word-break: break-all;
 }
 
+#environment {
+  text-align: center;
+}
+
 #environment-error {
   max-width: 300px;
   word-break: unset;
