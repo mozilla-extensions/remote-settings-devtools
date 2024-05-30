@@ -29,11 +29,6 @@ body.loading {
   margin: 4px 8px;
 }
 
-fieldset {
-  display: inline-block;
-  vertical-align: top;
-}
-
 #header section {
   display: inline-block;
   position: relative;
@@ -80,7 +75,6 @@ button.action {
 }
 
 h2, h3 {
-  display: inline-block;
   margin: unset;
 }
 
@@ -110,9 +104,6 @@ section {
   word-break: break-all;
 }
 
-#settings {
-  justify-self: end;
-}
 #environment-error {
   max-width: 300px;
   word-break: unset;
@@ -121,10 +112,6 @@ section {
 
 #environment-error pre {
   margin: 0px;
-}
-
-#action-box {
-  justify-self: start;
 }
 
 #status table {
