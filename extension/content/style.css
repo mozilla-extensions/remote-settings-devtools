@@ -23,51 +23,6 @@ body.loading {
   opacity: 0.5;
 }
 
-#header button {
-  display: block;
-  width: 91%;
-  margin: 4px 8px;
-}
-
-#header section {
-  display: inline-block;
-  position: relative;
-  vertical-align: top;
-  border-radius: 4px;
-}
-
-#header section h2 {
-  position: absolute;
-  font-size: medium;
-  top: -0.5em;
-  background-color: var(--in-content-box-background);
-  padding: 0 .3em;
-}
-
-button.sync {
-  background: url('download.svg') no-repeat;
-}
-
-button.clear-data {
-  background: url('broom.svg') no-repeat;
-}
-
-button.action {
-  content: ' ';
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  background-size: 28px;
-  margin-right: 5px;
-  cursor: pointer;
-}
-
-@media (prefers-color-scheme: dark) {
-  button.action {
-    filter: invert(1);
-  }
-}
-
 h2, h3 {
   margin: unset;
 }
@@ -98,6 +53,27 @@ section {
   word-break: break-all;
 }
 
+#header button {
+  display: block;
+  width: 91%;
+  margin: 4px 8px;
+}
+
+#header section {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  border-radius: 4px;
+}
+
+#header section h2 {
+  position: absolute;
+  font-size: medium;
+  top: -0.5em;
+  background-color: var(--in-content-box-background);
+  padding: 0 .3em;
+}
+
 #environment {
   text-align: center;
 }
@@ -116,6 +92,7 @@ section {
   width: 100%;
   min-width: 860px;
   text-align: center;
+  border-collapse: collapse;
 }
 #status table th {
   white-space: nowrap;
@@ -124,12 +101,7 @@ section {
 #status table td:first-child, #status table th:first-child {
   text-align: left
 }
-
-table {
-  border-collapse: collapse;
-}
-
-tr:not(:first-child) {
+#status table tr:not(:first-child) {
   border-top: 1px solid #757575;
 }
 
@@ -159,6 +131,31 @@ tr:not(:first-child) {
 .unsync::before {
   content: "⚠";
   color: var(--error-text-color);
+}
+
+button.action {
+  content: ' ';
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background-size: 28px;
+  margin-right: 5px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  button.action {
+    filter: invert(1);
+  }
+}
+
+button.sync {
+  background-image: url('download.svg');
+}
+
+button.clear-data {
+  background-image: url('broom.svg');
 }
 
 #sync-history > ul {
