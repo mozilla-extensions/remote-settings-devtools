@@ -59,6 +59,10 @@ section {
   margin-bottom: 10px;
 }
 
+#env-actions {
+  min-width: 8em;
+}
+
 #env-actions button, #env-actions select {
   display: block;
   width: 91%;
@@ -168,18 +172,24 @@ button.clear-data {
 }
 
 #sync-history {
-  min-width: 18em;
+  min-width: 19em;
 }
 
 #sync-history > ul {
-  max-height: 7em;
+  max-height: 14em;
   overflow-y: scroll;
   margin: 0;
   padding-left: 10px;
 }
+  @media(min-width: 1255px) {
+    /* When #header-status switches to 2 columns */
+    #sync-history > ul {
+      max-height: 7em;
+    }
+  }
 
 #sync-history li {
-  margin: 10px;
+  margin: 10px 0px 10px 10px;
 }
 
 #sync-history .status.success {
