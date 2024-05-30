@@ -53,6 +53,12 @@ section {
   word-break: break-all;
 }
 
+#header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
 #header button {
   display: block;
   width: 91%;
@@ -60,7 +66,6 @@ section {
 }
 
 #header section {
-  display: inline-block;
   position: relative;
   vertical-align: top;
   border-radius: 4px;
@@ -72,6 +77,10 @@ section {
   top: -0.5em;
   background-color: var(--in-content-box-background);
   padding: 0 .3em;
+}
+
+#header-status {
+  flex-grow: 1;
 }
 
 #environment {
@@ -156,6 +165,10 @@ button.sync {
 
 button.clear-data {
   background-image: url('broom.svg');
+}
+
+#sync-history {
+  min-width: 18em;
 }
 
 #sync-history > ul {
