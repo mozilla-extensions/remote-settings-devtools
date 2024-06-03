@@ -23,64 +23,7 @@ body.loading {
   opacity: 0.5;
 }
 
-#header button {
-  display: block;
-  width: 91%;
-  margin: 4px 8px;
-}
-
-fieldset {
-  display: inline-block;
-  vertical-align: top;
-}
-
-#header section {
-  display: inline-block;
-  position: relative;
-  vertical-align: top;
-  border-radius: 4px;
-}
-
-#header section h2 {
-  position: absolute;
-  font-size: medium;
-  top: -0.5em;
-  background-color: var(--in-content-box-background);
-  padding: 0 .3em;
-}
-
-#sync-history > ul { 
-  max-height: 12em;
-  overflow-y: scroll;
-  margin: 0;
-}
-
-button.sync {
-  background: url('download.svg') no-repeat;
-}
-
-button.clear-data {
-  background: url('broom.svg') no-repeat;
-}
-
-button.action {
-  content: ' ';
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  background-size: 28px;
-  margin-right: 5px;
-  cursor: pointer;
-}
-
-@media (prefers-color-scheme: dark) {
-  button.action {
-    filter: invert(1);
-  }
-}
-
 h2, h3 {
-  display: inline-block;
   margin: unset;
 }
 
@@ -110,9 +53,44 @@ section {
   word-break: break-all;
 }
 
-#settings {
-  justify-self: end;
+#header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
 }
+
+#env-actions {
+  min-width: 8em;
+}
+
+#env-actions button, #env-actions select {
+  display: block;
+  width: 91%;
+  margin: 4px 8px;
+}
+
+#header section {
+  position: relative;
+  vertical-align: top;
+  border-radius: 4px;
+}
+
+#header section h2 {
+  position: absolute;
+  font-size: medium;
+  top: -0.5em;
+  background-color: var(--in-content-box-background);
+  padding: 0 .3em;
+}
+
+#header-status {
+  flex-grow: 1;
+}
+
+#environment {
+  text-align: center;
+}
+
 #environment-error {
   max-width: 300px;
   word-break: unset;
@@ -123,14 +101,11 @@ section {
   margin: 0px;
 }
 
-#action-box {
-  justify-self: start;
-}
-
 #status table {
   width: 100%;
   min-width: 860px;
   text-align: center;
+  border-collapse: collapse;
 }
 #status table th {
   white-space: nowrap;
@@ -139,12 +114,7 @@ section {
 #status table td:first-child, #status table th:first-child {
   text-align: left
 }
-
-table {
-  border-collapse: collapse; 
-}
-
-tr:not(:first-child) {
+#status table tr:not(:first-child) {
   border-top: 1px solid #757575;
 }
 
@@ -176,8 +146,50 @@ tr:not(:first-child) {
   color: var(--error-text-color);
 }
 
+button.action {
+  content: ' ';
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background-size: 28px;
+  margin-right: 5px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  button.action {
+    filter: invert(1);
+  }
+}
+
+button.sync {
+  background-image: url('download.svg');
+}
+
+button.clear-data {
+  background-image: url('broom.svg');
+}
+
+#sync-history {
+  min-width: 19em;
+}
+
+#sync-history > ul {
+  max-height: 14em;
+  overflow-y: scroll;
+  margin: 0;
+  padding-left: 10px;
+}
+  @media(min-width: 1255px) {
+    /* When #header-status switches to 2 columns */
+    #sync-history > ul {
+      max-height: 7em;
+    }
+  }
+
 #sync-history li {
-  margin: 10px;
+  margin: 10px 0px 10px 10px;
 }
 
 #sync-history .status.success {
