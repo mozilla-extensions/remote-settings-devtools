@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build container
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           tags: ${{ env.TEST_TAG }}
           file: Dockerfile
