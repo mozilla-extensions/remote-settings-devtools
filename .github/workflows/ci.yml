@@ -28,9 +28,11 @@ jobs:
       - name: Code Style
         run: npm run cs-check
 
-      - name: Lint
-        run: npm run lint   
+      - name: Code Lint
+        run: npm run lint
 
+      - name: Ext Lint
+        run: npx web-ext lint --warnings-as-errors --privileged --self-hosted --source-dir=extension/
 
   test:
     runs-on: ubuntu-latest
