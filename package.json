@@ -30,7 +30,7 @@
     "jest": "^29.7.0",
     "npm-run-all2": "6.2.0",
     "prettier": "3.3.2",
-    "rimraf": "5.0.7",
+    "rimraf": "5.0.10",
     "selenium-webdriver": "^4.20.0",
     "web-ext": "8.2.0"
   }
