@@ -32,6 +32,6 @@
     "prettier": "3.3.3",
     "rimraf": "5.0.10",
     "selenium-webdriver": "^4.20.0",
-    "web-ext": "8.2.0"
+    "web-ext": "8.3.0"
   }
 }
