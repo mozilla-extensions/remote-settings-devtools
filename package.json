@@ -5,6 +5,7 @@
   "homepage_url": "https://github.com/mozilla-extensions/remote-settings-devtools",
   "private": true,
   "license": "MPLv2",
+  "docker-image": "node-lts-latest",
   "scripts": {
     "build": "npm-run-all clean build:*",
     "build:extension": "npx web-ext build -s ./extension/ --overwrite-dest",
