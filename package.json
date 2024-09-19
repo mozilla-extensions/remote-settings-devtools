@@ -5,6 +5,7 @@
   "homepage_url": "https://github.com/mozilla-extensions/remote-settings-devtools",
   "private": true,
   "license": "MPLv2",
+  "docker-image": "node-lts-latest",
   "scripts": {
     "build": "npm-run-all clean build:*",
     "build:extension": "npx web-ext build -s ./extension/ --overwrite-dest",
@@ -32,6 +33,6 @@
     "prettier": "3.3.3",
     "rimraf": "5.0.10",
     "selenium-webdriver": "^4.20.0",
-    "web-ext": "8.2.0"
+    "web-ext": "8.3.0"
   }
 }
