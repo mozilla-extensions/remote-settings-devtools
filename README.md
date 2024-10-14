@@ -14,10 +14,18 @@ This addon provides some tools to assist developers with remote settings.
 
 # Install
 
+## Firefox for desktop
+
 - Pick the .xpi file from the [releases page](https://github.com/mozilla-extensions/remote-settings-devtools/releases).
-- When asked for comnfirmation, select "Continue to installation".
+- When asked for confirmation, select "Continue to installation".
 
 > Note: it is highly recommended to use a temporary or development user profile
+
+## Firefox for Android
+
+- Download the .xpi file from the [releases page](https://github.com/mozilla-extensions/remote-settings-devtools/releases).
+- Enable the Debug Menu: https://firefox-source-docs.mozilla.org/mobile/android/fenix/Secret-settings-debug-menu-instructions.html
+- Install the extension from file
 
 # Development
 
