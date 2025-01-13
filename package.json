@@ -22,7 +22,7 @@
     "tcs:docker": "docker build . -t addon-test:latest && docker run --rm -it addon-test:latest"
   },
   "devDependencies": {
-    "eslint": "8.57.1",
+    "eslint": "9.18.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-fetch-options": "0.0.5",
     "eslint-plugin-html": "8.1.2",
