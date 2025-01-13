@@ -149,6 +149,15 @@ async function refreshUI(state) {
     };
     statusTable.appendChild(tableRow);
   });
+  const options = {
+    valueNames: [
+      "collection",
+      "last-check",
+      "server-timestamp",
+      "local-timestamp",
+    ],
+  };
+  new List("status-table", options);
 }
 
 async function main() {

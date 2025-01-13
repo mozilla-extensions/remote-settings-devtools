@@ -199,3 +199,17 @@ button.clear-data {
 #sync-history .status:not(.success) {
   background-color: var(--error-text-color);
 }
+
+.sort:after {
+  content: "▼▲";
+  padding-left: 10px;
+  opacity: 0.5;
+}
+.sort.desc:after {
+  content: "▼";
+  opacity: 1;
+}
+.sort.asc:after {
+  content: "▲";
+  opacity: 1;
+}
