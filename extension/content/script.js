@@ -157,6 +157,7 @@ async function refreshUI(state) {
       "local-timestamp",
     ],
   };
+  // eslint-disable-next-line no-undef
   new List("status-table", options);
 }
 
