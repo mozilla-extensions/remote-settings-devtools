@@ -85,12 +85,28 @@ async function waitForLoad() {
     hasLoadingElements ||
     debounceValue + busyWait > new Date().getTime()
   );
+  await driver.sleep(busyWait);
 }
 
 // making this a little easier to read in tests
-async function clickByCss(css) {
-  let element = await driver.findElement(By.css(css));
-  await element.click();
+async function clickByCss(css, retries = 3) {
+  let attempts = 0;
+  while (attempts < retries) {
+    try {
+      let element = await driver.findElement(By.css(css));
+      await element.click();
+      return;
+    } catch (error) {
+      if (error.name === "StaleElementReferenceError") {
+        console.log(`Attempt ${attempts + 1} failed. Retrying...`);
+        attempts++;
+        await driver.sleep(busyWait);
+      } else {
+        // Re-throw other errors
+        throw error;
+      }
+    }
+  }
 }
 
 describe("End to end browser tests", () => {
