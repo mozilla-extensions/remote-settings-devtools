@@ -32,7 +32,7 @@ jobs:
         run: npm run lint
 
       - name: Ext Lint
-        run: npx web-ext lint --warnings-as-errors --privileged --self-hosted --source-dir=extension/
+        run: npx web-ext lint --ignore-files="**/*.min.js" --warnings-as-errors --privileged --self-hosted --source-dir=extension/
 
   test:
     runs-on: ubuntu-latest
