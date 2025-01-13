@@ -200,6 +200,10 @@ button.clear-data {
   background-color: var(--error-text-color);
 }
 
+.sort {
+  cursor: pointer;
+}
+
 .sort:after {
   content: "▼▲";
   padding-left: 10px;
