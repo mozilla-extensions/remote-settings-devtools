@@ -117,8 +117,13 @@ async function refreshUI(state) {
 
   statusTable.innerHTML = "";
   collections.forEach((status) => {
-    const { bucket, collection, lastCheck: lastCheckCollection, localTimestampCollection, serverTimestampCollection } =
-      status;
+    const {
+      bucket,
+      collection,
+      lastCheck: lastCheckCollection,
+      localTimestampCollection,
+      serverTimestampCollection,
+    } = status;
     const url = `${serverURL}/buckets/${bucket}/collections/${collection}/changeset?_expected=${serverTimestamp}`;
     const identifier = `${bucket}/${collection}`;
 
@@ -127,13 +132,18 @@ async function refreshUI(state) {
     tableRow.querySelector("tr").setAttribute("id", tableRowId);
     tableRow.querySelector(".url").textContent = identifier;
     tableRow.querySelector(".url").setAttribute("href", url);
-    tableRow.querySelector(".human-server-timestamp").textContent =
-      humanDate(serverTimestampCollection);
-    tableRow.querySelector(".server-timestamp").textContent = serverTimestampCollection;
+    tableRow.querySelector(".human-server-timestamp").textContent = humanDate(
+      serverTimestampCollection,
+    );
+    tableRow.querySelector(".server-timestamp").textContent =
+      serverTimestampCollection;
     tableRow.querySelector(".human-local-timestamp").className +=
-    localTimestampCollection == serverTimestampCollection ? " up-to-date" : " unsync";
-    tableRow.querySelector(".human-local-timestamp").textContent =
-      humanDate(localTimestampCollection);
+      localTimestampCollection == serverTimestampCollection
+        ? " up-to-date"
+        : " unsync";
+    tableRow.querySelector(".human-local-timestamp").textContent = humanDate(
+      localTimestampCollection,
+    );
     tableRow.querySelector(".local-timestamp").textContent = localTimestamp;
     tableRow.querySelector(".last-check").textContent = humanDate(
       lastCheckCollection * 1000,
