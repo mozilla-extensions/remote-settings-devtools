@@ -16,7 +16,7 @@ const MEGAPHONE_STAGE = "wss://autoconnect.stage.mozaws.net";
 async function getState() {
   const inspected = await RemoteSettings.inspect();
 
-  const { serverURL, previewMode } = inspected;
+  const { collections, serverURL, previewMode } = inspected;
   let environment = "custom";
   switch (serverURL) {
     case SERVER_PROD:
@@ -57,10 +57,18 @@ async function getState() {
     }
   }
 
+  // If one collection has signature verification enabled, then consider
+  // it's enabled for all in the UI.
+  const signaturesEnabled = collections.some(({ collection, bucket }) => {
+    const c = RemoteSettings(collection, { bucketName: bucket });
+    return c.verifySignature;
+  });
+
   return {
     ...inspected,
     environment,
     serverSettingIgnored,
+    signaturesEnabled,
   };
 }
 
@@ -154,6 +162,20 @@ var remotesettings = class extends ExtensionAPI {
             );
 
             refreshUI();
+          },
+
+          /**
+           * enableSignatureVerification() enables or disables signature
+           * verification on all known collections.
+           * @param {bool} enabled true to enable, false to disable
+           */
+          async enableSignatureVerification(enabled) {
+            const { collections } = await RemoteSettings.inspect();
+            for (const { collection, bucket } of collections) {
+              RemoteSettings(collection, {
+                bucketName: bucket,
+              }).verifySignature = enabled;
+            }
           },
 
           /**

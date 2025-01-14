@@ -47,10 +47,13 @@ dd {
 }
 
 section {
-  border: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background);
   padding: 10px;
   word-break: break-all;
+}
+
+section.bordered {
+  border: 1px solid var(--in-content-border-color);
 }
 
 #header {
@@ -59,11 +62,11 @@ section {
   margin-bottom: 10px;
 }
 
-#env-actions {
+#options {
   min-width: 8em;
 }
 
-#env-actions button, #env-actions select {
+#options button, #options select, #options span {
   display: block;
   width: 91%;
   margin: 4px 8px;
@@ -85,6 +88,11 @@ section {
 
 #header-status {
   flex-grow: 1;
+}
+
+#actions {
+  padding: 0px;
+  padding-bottom: 10px;
 }
 
 #environment {
@@ -184,7 +192,7 @@ button.clear-data {
   @media(min-width: 1255px) {
     /* When #header-status switches to 2 columns */
     #sync-history > ul {
-      max-height: 7em;
+      max-height: 8em;
     }
   }
 

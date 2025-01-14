@@ -69,6 +69,7 @@ async function refreshUI(state) {
     environment,
     history,
     serverSettingIgnored,
+    signaturesEnabled,
   } = state;
 
   showLoading(false);
@@ -110,6 +111,9 @@ async function refreshUI(state) {
     entryRow.querySelector(".status").className += ` ${entry.status}`;
     historyList.appendChild(entryRow);
   });
+
+  // Options
+  document.getElementById("enable-signatures").checked = signaturesEnabled;
 
   // Table of collections.
   const tpl = document.getElementById("collection-status-tpl");
@@ -199,6 +203,10 @@ async function main() {
     showGlobalError(null);
     showLoading(true);
     await remotesettings.switchEnvironment(event.target.value);
+  };
+
+  document.getElementById("enable-signatures").onchange = async (event) => {
+    await remotesettings.enableSignatureVerification(event.target.checked);
   };
 
   // Poll for changes button.
