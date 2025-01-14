@@ -2,6 +2,8 @@ ChromeUtils.defineESModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
+/* global ExtensionAPI, ExtensionCommon, ExtensionUtils, Services */
+
 const { EventManager } = ExtensionCommon;
 const { ExtensionError } = ExtensionUtils;
 
