@@ -121,8 +121,8 @@ async function refreshUI(state) {
       bucket,
       collection,
       lastCheck: lastCheckCollection,
-      localTimestampCollection,
-      serverTimestampCollection,
+      localTimestamp: localTimestampCollection,
+      serverTimestamp: serverTimestampCollection,
     } = status;
     const url = `${serverURL}/buckets/${bucket}/collections/${collection}/changeset?_expected=${serverTimestamp}`;
     const identifier = `${bucket}/${collection}`;
