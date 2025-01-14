@@ -159,6 +159,16 @@ async function refreshUI(state) {
     };
     statusTable.appendChild(tableRow);
   });
+  const options = {
+    valueNames: [
+      "collection",
+      "last-check",
+      "server-timestamp",
+      "local-timestamp",
+    ],
+  };
+  // eslint-disable-next-line no-undef
+  new List("status-table", options);
 }
 
 async function main() {

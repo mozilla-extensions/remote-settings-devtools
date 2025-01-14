@@ -47,17 +47,17 @@
     </section>
   </section>
   <section id="status">
-    <table>
+    <table id="status-table">
       <thead>
         <tr>
-          <th>Collection</th>
-          <th>Last Check</th>
-          <th>Server Timestamp</th>
-          <th>Local Timestamp</th>
+          <th><span class="sort" data-sort="collection">Collection</span></th>
+          <th><span class="sort" data-sort="last-check">Last Check</span></th>
+          <th><span class="sort desc" data-sort="server-timestamp">Server Timestamp</span></th>
+          <th><span class="sort" data-sort="local-timestamp">Local Timestamp</span></th>
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="list">
       </tbody>
     </table>
   </section>
@@ -66,7 +66,7 @@
 <template id="collection-status-tpl">
   <tr class="collection-status">
     <td>
-      <a class="url"></a>
+      <a class="collection url"></a>
       <div class="error"></div>
     </td>
     <td class="last-check"></td>
@@ -92,6 +92,7 @@
   </li>
 </template>
 
+<script type="text/javascript" src="list-2.3.1.min.js"></script>
 <script type="text/javascript" src="script.js"></script>
 
 </html>
