@@ -15,7 +15,7 @@ beforeAll(async () => {
     "./web-ext-artifacts/remote-settings-devtools.xpi",
   );
   let profile = new FirefoxProfile();
-  profile.addExtension(xpiPath, (err, details) => {}); // empty function is required to load
+  profile.addExtension(xpiPath, (_err, _details) => {}); // empty function is required to load
 
   // setup firefox options that will allow our extension to run
   const options = new Options(profile.path());
@@ -46,7 +46,7 @@ beforeAll(async () => {
     const lastLoad = document.createElement('input');
     lastLoad.id = "hdnLastLoad";
     lastLoad.setAttribute('value', 0);
-    
+
     const observer = new MutationObserver((mutations) => {
       for (let m of mutations) {
         if (m.attributeName === "class" && m.oldValue?.includes("loading")) {
@@ -54,7 +54,7 @@ beforeAll(async () => {
         }
       }
     });
-    
+
     observer.observe(document.querySelector('body'), {
       subtree: true,
       childList: true,
@@ -98,7 +98,7 @@ async function clickByCss(css, retries = 3) {
       return;
     } catch (error) {
       if (error.name === "StaleElementReferenceError") {
-        console.log(`Attempt ${attempts + 1} failed. Retrying...`);
+        console.warn(`Attempt ${attempts + 1} failed. Retrying...`);
         attempts++;
         await driver.sleep(busyWait);
       } else {

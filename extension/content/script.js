@@ -117,7 +117,7 @@ async function refreshUI(state) {
 
   statusTable.innerHTML = "";
   collections.forEach((status) => {
-    const { bucket, collection, lastCheck, localTimestamp, serverTimestamp } =
+    const { bucket, collection, lastCheck: lastCheckCollection, localTimestampCollection, serverTimestampCollection } =
       status;
     const url = `${serverURL}/buckets/${bucket}/collections/${collection}/changeset?_expected=${serverTimestamp}`;
     const identifier = `${bucket}/${collection}`;
@@ -128,15 +128,15 @@ async function refreshUI(state) {
     tableRow.querySelector(".url").textContent = identifier;
     tableRow.querySelector(".url").setAttribute("href", url);
     tableRow.querySelector(".human-server-timestamp").textContent =
-      humanDate(serverTimestamp);
-    tableRow.querySelector(".server-timestamp").textContent = serverTimestamp;
+      humanDate(serverTimestampCollection);
+    tableRow.querySelector(".server-timestamp").textContent = serverTimestampCollection;
     tableRow.querySelector(".human-local-timestamp").className +=
-      localTimestamp == serverTimestamp ? " up-to-date" : " unsync";
+    localTimestampCollection == serverTimestampCollection ? " up-to-date" : " unsync";
     tableRow.querySelector(".human-local-timestamp").textContent =
-      humanDate(localTimestamp);
+      humanDate(localTimestampCollection);
     tableRow.querySelector(".local-timestamp").textContent = localTimestamp;
     tableRow.querySelector(".last-check").textContent = humanDate(
-      lastCheck * 1000,
+      lastCheckCollection * 1000,
     );
 
     tableRow.querySelector("button.clear-data").onclick = async () => {
