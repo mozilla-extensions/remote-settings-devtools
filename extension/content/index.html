@@ -6,24 +6,32 @@
 </head>
 
 <body class=" loading">
-  <section id="header">
-    <section id="env-actions">
-      <h2>Environment</h2>
-      <select id="environment">
-        <option value="custom"></option>
-        <option value="prod">Prod</option>
-        <option value="prod-preview">Prod (preview)</option>
-        <option value="stage">Stage</option>
-        <option value="stage-preview">Stage (preview)</option>
-        <option value="dev">Dev</option>
-        <option value="dev-preview">Dev (preview)</option>
-        <option value="local">Local</option>
-      </select>
-      <button id="run-poll" title="Poll for changes of remote settings">Sync</button>
-      <button id="clear-all-data" title="Clear every local data">Clear all</button>
-      <div id="environment-error" class="error">⚠️ Environment cannot be changed. Try running Firefox with environment variable <pre>MOZ_REMOTE_SETTINGS_DEVTOOLS=1</pre></div>
-    </section>
-    <section id="header-status"">
+  <section id="header" class="bordered">
+    <div><!-- make a column -->
+      <section id="actions">
+        <button id="run-poll" title="Poll for changes of remote settings">Sync</button>
+        <button id="clear-all-data" title="Clear every local data">Clear all</button>
+        <div id="environment-error" class="error">⚠️ Environment cannot be changed. Try running Firefox with environment variable <pre>MOZ_REMOTE_SETTINGS_DEVTOOLS=1</pre></div>
+      </section>
+      <section id="options" class="bordered">
+        <h2>Options</h2>
+        <select id="environment">
+          <option value="custom"></option>
+          <option value="prod">Prod</option>
+          <option value="prod-preview">Prod (preview)</option>
+          <option value="stage">Stage</option>
+          <option value="stage-preview">Stage (preview)</option>
+          <option value="dev">Dev</option>
+          <option value="dev-preview">Dev (preview)</option>
+          <option value="local">Local</option>
+        </select>
+        <span>
+          <input type="checkbox" id="enable-signatures"/>
+          <label for="enable-signatures">Signatures enabled</label>
+        </span>
+      </section>
+    </div>
+    <section id="header-status" class="bordered">
       <h2>Status</h2>
       <div id="polling-error" class="error"></div>
       <dl>
@@ -41,12 +49,12 @@
         <dd id="last-check">N/A</dd>
       </dl>
     </section>
-    <section id="sync-history">
+    <section id="sync-history" class="bordered">
       <h2>Sync History</h2>
       <ul></ul>
     </section>
   </section>
-  <section id="status">
+  <section id="status" class="bordered">
     <table id="status-table">
       <thead>
         <tr>

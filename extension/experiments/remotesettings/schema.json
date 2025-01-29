@@ -31,6 +31,19 @@
         ]
       },
       {
+        "name": "enableSignatureVerification",
+        "type": "function",
+        "description": "Enable signatures verification",
+        "async": true,
+        "parameters": [
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "description": "true to enable, false to disable"
+          }
+        ]
+      },
+      {
         "name": "deleteLocal",
         "type": "function",
         "description": "Deletes the local records of the specified collection",
