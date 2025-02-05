@@ -79,7 +79,10 @@ async function refreshUI(state) {
   document.getElementById("environment-error").style.display =
     serverSettingIgnored ? "block" : "none";
   if (serverSettingIgnored) {
-    environmentElt.setAttribute("disabled", "disabled");
+    // Disable all options except those related to prod
+    environmentElt
+      .querySelectorAll("option:not(.prod)")
+      .forEach((optionElt) => optionElt.setAttribute("disabled", "disabled"));
   }
 
   document.getElementById("polling-url").textContent = new URL(
