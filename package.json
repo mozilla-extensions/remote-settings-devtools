@@ -22,7 +22,7 @@
     "tcs:docker": "docker build . -t addon-test:latest && docker run --rm -it addon-test:latest"
   },
   "devDependencies": {
-    "@microsoft/eslint-plugin-sdl": "1.0.1",
+    "@microsoft/eslint-plugin-sdl": "1.1.0",
     "eslint": "9.20.1",
     "eslint-config-prettier": "10.0.1",
     "eslint-plugin-fetch-options": "0.0.5",
