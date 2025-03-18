@@ -36,6 +36,6 @@
     "npm-run-all2": "7.0.2",
     "rimraf": "6.0.1",
     "selenium-webdriver": "^4.20.0",
-    "web-ext": "8.4.0"
+    "web-ext": "8.5.0"
   }
 }
