@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@microsoft/eslint-plugin-sdl": "1.1.0",
-    "eslint": "9.25.1",
+    "eslint": "9.27.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-fetch-options": "0.0.5",
     "eslint-plugin-html": "8.1.2",
