@@ -1,5 +1,15 @@
-ChromeUtils.defineESModuleGetters(this, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+// Handle migration from resource to moz-src, see bug 1951644.
+ChromeUtils.defineLazyGetter(this, "RemoteSettings", () => {
+  try {
+    return ChromeUtils.importESModule(
+      "moz-src:///services/settings/remote-settings.sys.mjs",
+    ).RemoteSettings;
+  } catch {
+    // Fallback to URI format prior to FF 143.
+    return ChromeUtils.importESModule(
+      "resource://services-settings/remote-settings.sys.mjs",
+    ).RemoteSettings;
+  }
 });
 
 /* global ExtensionAPI, ExtensionCommon, ExtensionUtils, Services */
