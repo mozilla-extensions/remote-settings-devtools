@@ -155,6 +155,10 @@ describe("End to end browser tests", () => {
     // force sync the first collection and verify it worked
     await clickByCss("#status .sync");
     await waitForLoad();
+
+    const dom = await driver.getPageSource();
+    console.log(dom);
+
     let firstTimestamp = await driver.findElement(
       By.css("#status .human-local-timestamp"),
     );
