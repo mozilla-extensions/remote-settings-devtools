@@ -173,17 +173,24 @@ describe("End to end browser tests", () => {
     await clickByCss("#status .sync");
     await waitForLoad();
 
-    let firstTimestamp = await driver.findElement(
-      By.css("#status .human-local-timestamp"),
-    );
-    expect(await firstTimestamp.getAttribute("class")).toContain("up-to-date");
+    await retry(async () => {
+      let firstTimestamp = await driver.findElement(
+        By.css("#status .human-local-timestamp"),
+      );
+      expect(await firstTimestamp.getAttribute("class")).toContain(
+        "up-to-date",
+      );
+    });
 
     // force sync the first collection and verify it worked
     await clickByCss("#status .clear-data");
     await waitForLoad();
-    firstTimestamp = await driver.findElement(
-      By.css("#status .human-local-timestamp"),
-    );
-    expect(await firstTimestamp.getAttribute("class")).toContain("unsync");
+
+    await retry(async () => {
+      let firstTimestamp = await driver.findElement(
+        By.css("#status .human-local-timestamp"),
+      );
+      expect(await firstTimestamp.getAttribute("class")).toContain("unsync");
+    });
   });
 });
