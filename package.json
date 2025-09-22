@@ -31,7 +31,7 @@
     "eslint-plugin-jest": "28.14.0",
     "eslint-plugin-mozilla": "4.2.1",
     "eslint-plugin-no-unsanitized": "4.1.2",
-    "prettier": "3.5.3",
+    "prettier": "3.6.2",
     "jest": "^30.0.0",
     "npm-run-all2": "8.0.4",
     "rimraf": "6.0.1",
