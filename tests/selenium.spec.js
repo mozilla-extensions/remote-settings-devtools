@@ -89,24 +89,39 @@ async function waitForLoad() {
 }
 
 // making this a little easier to read in tests
-async function clickByCss(css, retries = 3) {
+async function retry(fn, errorsToRetry = [], retries = 5) {
   let attempts = 0;
+  let lastError = null;
   while (attempts < retries) {
     try {
-      let element = await driver.findElement(By.css(css));
-      await element.click();
-      return;
+      if (attempts > 0) {
+        await driver.sleep(busyWait);
+      }
+      return await fn();
     } catch (error) {
-      if (error.name === "StaleElementReferenceError") {
+      lastError = error;
+      // Retry all errors or only the ones specified in `errorsToRetry`.
+      if (!errorsToRetry.length || errorsToRetry.includes(error.name)) {
         console.warn(`Attempt ${attempts + 1} failed. Retrying...`);
         attempts++;
-        await driver.sleep(busyWait);
       } else {
         // Re-throw other errors
         throw error;
       }
     }
   }
+  throw lastError;
+}
+
+async function clickByCss(css, retries = 3) {
+  return await retry(
+    async () => {
+      let element = await driver.findElement(By.css(css));
+      await element.click();
+    },
+    ["StaleElementReferenceError"],
+    retries,
+  );
 }
 
 describe("End to end browser tests", () => {
@@ -142,22 +157,21 @@ describe("End to end browser tests", () => {
     await clickByCss("#clear-all-data");
     await waitForLoad();
 
-    // verify everything is cleared as expected
-    expect(
-      (await driver.findElements(By.css("#status .unsync"))).length,
-    ).toBeGreaterThan(1);
-    expect(
-      (await driver.findElements(By.css("#status .up-to-date"))).length,
-    ).toBe(0);
+    await retry(async () => {
+      // verify everything is cleared as expected
+      expect(
+        (await driver.findElements(By.css("#status .unsync"))).length,
+      ).toBeGreaterThan(1);
+      expect(
+        (await driver.findElements(By.css("#status .up-to-date"))).length,
+      ).toBe(0);
+    });
   });
 
   test("Clear and re-download a collection", async () => {
     // force sync the first collection and verify it worked
     await clickByCss("#status .sync");
     await waitForLoad();
-
-    const dom = await driver.getPageSource();
-    console.log(dom);
 
     let firstTimestamp = await driver.findElement(
       By.css("#status .human-local-timestamp"),
