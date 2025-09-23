@@ -110,6 +110,8 @@ async function retry(fn, errorsToRetry = [], retries = 5) {
       }
     }
   }
+  const dom = await driver.getPageSource();
+  console.log(dom);
   throw lastError;
 }
 
