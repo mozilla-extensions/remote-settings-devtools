@@ -151,7 +151,7 @@ async function refreshUI(state) {
     tableRow.querySelector(".server-timestamp").textContent =
       serverTimestampCollection;
     const tsRowElt = tableRow.querySelector(".human-local-timestamp");
-    tsRowElt.className =
+    tsRowElt.className +=
       localTimestampCollection == serverTimestampCollection
         ? " up-to-date"
         : " unsync";
