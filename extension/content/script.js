@@ -91,10 +91,16 @@ async function refreshUI(state) {
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
   document.getElementById("local-timestamp").textContent = localTimestamp;
   document.getElementById("server-timestamp").textContent = serverTimestamp;
-  document.getElementById("human-local-timestamp").className =
+
+  const tsElt = document.getElementById("human-local-timestamp");
+  tsElt.className =
     localTimestamp == serverTimestamp ? " up-to-date" : " unsync";
-  document.getElementById("human-local-timestamp").textContent =
-    humanDate(localTimestamp);
+  tsElt.textContent = humanDate(localTimestamp);
+  tsElt.setAttribute(
+    "title",
+    localTimestamp == serverTimestamp ? "Synced" : "Local data is out of sync",
+  );
+
   document.getElementById("human-server-timestamp").textContent =
     humanDate(serverTimestamp);
   document.getElementById("last-check").textContent = humanDate(
@@ -144,13 +150,19 @@ async function refreshUI(state) {
     );
     tableRow.querySelector(".server-timestamp").textContent =
       serverTimestampCollection;
-    tableRow.querySelector(".human-local-timestamp").className +=
+    const tsRowElt = tableRow.querySelector(".human-local-timestamp");
+    tsRowElt.className +=
       localTimestampCollection == serverTimestampCollection
         ? " up-to-date"
         : " unsync";
-    tableRow.querySelector(".human-local-timestamp").textContent = humanDate(
-      localTimestampCollection,
+    tsRowElt.textContent = humanDate(localTimestampCollection);
+    tsRowElt.setAttribute(
+      "title",
+      localTimestampCollection == serverTimestampCollection
+        ? "Synced"
+        : "Local data is out of sync",
     );
+
     tableRow.querySelector(".local-timestamp").textContent = localTimestamp;
     tableRow.querySelector(".last-check").textContent = humanDate(
       lastCheckCollection * 1000,
