@@ -9,6 +9,7 @@ export default [
       "node_modules/",
       "web-ext-artifacts/",
       "extension/content/*.min.js",
+      "**/*.html",
     ],
   },
   {
