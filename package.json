@@ -34,7 +34,7 @@
     "prettier": "3.6.2",
     "jest": "^30.0.0",
     "npm-run-all2": "8.0.4",
-    "rimraf": "6.0.1",
+    "rimraf": "6.1.0",
     "selenium-webdriver": "^4.20.0",
     "web-ext": "9.1.0"
   }
