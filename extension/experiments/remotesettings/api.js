@@ -17,30 +17,31 @@ ChromeUtils.defineLazyGetter(this, "RemoteSettings", () => {
 const { EventManager } = ExtensionCommon;
 const { ExtensionError } = ExtensionUtils;
 
-const SERVER_LOCAL = "http://localhost:8888/v1";
-const SERVER_PROD = "https://firefox.settings.services.mozilla.com/v1";
-const SERVER_STAGE = "https://firefox.settings.services.allizom.org/v1";
-const SERVER_DEV = "https://remote-settings-dev.allizom.org/v1";
+const SERVER_LOCAL = "http://localhost:8888";
+const SERVER_PROD = "https://firefox.settings.services.mozilla.com";
+const SERVER_STAGE = "https://firefox.settings.services.allizom.org";
+const SERVER_DEV = "https://remote-settings-dev.allizom.org";
 const MEGAPHONE_STAGE = "wss://autoconnect.stage.mozaws.net";
 
 async function getState() {
   const inspected = await RemoteSettings.inspect();
 
   const { collections, serverURL, previewMode } = inspected;
-  let environment = "custom";
-  switch (serverURL) {
-    case SERVER_PROD:
-      environment = "prod";
-      break;
-    case SERVER_STAGE:
-      environment = "stage";
-      break;
-    case SERVER_DEV:
-      environment = "dev";
-      break;
-    case SERVER_LOCAL:
-      environment = "local";
-      break;
+  let environment = "custom",
+    apiVersion = "v1";
+
+  if (serverURL.startsWith(SERVER_PROD)) {
+    environment = "prod";
+  } else if (serverURL.startsWith(SERVER_STAGE)) {
+    environment = "stage";
+  } else if (serverURL.startsWith(SERVER_DEV)) {
+    environment = "dev";
+  } else if (serverURL.startsWith(SERVER_LOCAL)) {
+    environment = "local";
+  }
+
+  if (serverURL.endsWith("v2")) {
+    apiVersion = "v2";
   }
 
   if (previewMode) {
@@ -77,6 +78,7 @@ async function getState() {
   return {
     ...inspected,
     environment,
+    apiVersion,
     serverSettingIgnored,
     signaturesEnabled,
   };
@@ -136,29 +138,29 @@ var remotesettings = class extends ExtensionAPI {
            * setEnvironment() will set the necessary internal preferences to switch from
            * an environment to another.
            */
-          async switchEnvironment(env) {
+          async switchEnvironment(env, apiVersion = "v1") {
             if (env.includes("prod")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
-                SERVER_PROD,
+                `${SERVER_PROD}/${apiVersion}`,
               );
               Services.prefs.clearUserPref("dom.push.serverURL");
             } else if (env.includes("stage")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
-                SERVER_STAGE,
+                `${SERVER_STAGE}/${apiVersion}`,
               );
               Services.prefs.setCharPref("dom.push.serverURL", MEGAPHONE_STAGE);
             } else if (env.includes("dev")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
-                SERVER_DEV,
+                `${SERVER_DEV}/${apiVersion}`,
               );
               Services.prefs.clearUserPref("dom.push.serverURL");
             } else if (env.includes("local")) {
               Services.prefs.setCharPref(
                 "services.settings.server",
-                SERVER_LOCAL,
+                `${SERVER_LOCAL}/${apiVersion}`,
               );
               Services.prefs.clearUserPref("dom.push.serverURL");
             }

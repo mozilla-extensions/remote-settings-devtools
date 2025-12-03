@@ -67,6 +67,7 @@ async function refreshUI(state) {
     collections,
     pollingEndpoint,
     environment,
+    apiVersion,
     history,
     serverSettingIgnored,
     signaturesEnabled,
@@ -76,6 +77,8 @@ async function refreshUI(state) {
 
   const environmentElt = document.getElementById("environment");
   environmentElt.value = environment;
+  const apiVersionElt = document.getElementById("apiVersion");
+  apiVersionElt.value = apiVersion;
   document.getElementById("environment-error").style.display =
     serverSettingIgnored ? "block" : "none";
   if (serverSettingIgnored) {
@@ -85,9 +88,9 @@ async function refreshUI(state) {
       .forEach((optionElt) => optionElt.setAttribute("disabled", "disabled"));
   }
 
-  document.getElementById("polling-url").textContent = new URL(
-    pollingEndpoint,
-  ).origin;
+  document.getElementById("polling-url").textContent = `${
+    new URL(pollingEndpoint).origin
+  }/${apiVersion}`;
   document.getElementById("polling-url").setAttribute("href", pollingEndpoint);
   document.getElementById("local-timestamp").textContent = localTimestamp;
   document.getElementById("server-timestamp").textContent = serverTimestamp;
@@ -217,7 +220,21 @@ async function main() {
   document.getElementById("environment").onchange = async (event) => {
     showGlobalError(null);
     showLoading(true);
-    await remotesettings.switchEnvironment(event.target.value);
+    const apiVersion = document.getElementById("apiVersion");
+    await remotesettings.switchEnvironment(
+      event.target.value,
+      apiVersion.value,
+    );
+  };
+
+  document.getElementById("apiVersion").onchange = async (event) => {
+    showGlobalError(null);
+    showLoading(true);
+    const environment = document.getElementById("environment");
+    await remotesettings.switchEnvironment(
+      environment.value,
+      event.target.value,
+    );
   };
 
   document.getElementById("enable-signatures").onchange = async (event) => {
