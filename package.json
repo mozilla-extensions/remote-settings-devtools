@@ -16,6 +16,7 @@
     "lint": "npm run lint:eslint",
     "lint:eslint": "eslint .",
     "lint:fix": "npm run lint:eslint -- --fix",
+    "lint:ext": "npx web-ext lint --ignore-files=\"**/*.min.js\" --warnings-as-errors --privileged --self-hosted --source-dir=extension/",
     "start:linux": "web-ext run --verbose --source-dir ./extension/ --firefox-binary /usr/bin/firefox-nightly --pref 'extensions.experiments.enabled=true'",
     "start:macos": "web-ext run --verbose --source-dir ./extension/ --firefox-binary '/Applications/Firefox Nightly.app/Contents/MacOS/firefox' --pref 'extensions.experiments.enabled=true'",
     "tcs:test": "npm-run-all clean build:* && jest --testTimeout=30000",
