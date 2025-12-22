@@ -27,6 +27,10 @@
             "name": "env",
             "type": "string",
             "description": "One of 'dev', 'stage', or 'prod'"
+          },{
+            "name": "apiVersion",
+            "type": "string",
+            "description": "One of 'v1' or 'v2'"
           }
         ]
       },
