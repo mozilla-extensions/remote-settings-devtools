@@ -12,7 +12,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "remote-settings-devtools@mozilla.com",
-      "strict_min_version": "112.0",
+      "strict_min_version": "142.0",
       "update_url": "https://raw.githubusercontent.com/mozilla-extensions/remote-settings-devtools/master/update.json",
       "data_collection_permissions": {
         "required": ["none"]
