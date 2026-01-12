@@ -195,4 +195,19 @@ describe("End to end browser tests", () => {
       expect(await firstTimestamp.getAttribute("class")).toContain("unsync");
     });
   });
+
+  test("Switch to v2 endpoint", async () => {
+    await clickByCss("#apiVersion");
+    await clickByCss('#apiVersion [value="v2"]');
+    await waitForLoad();
+
+    // verify server URI changes as expected
+    let serverLink = await driver.findElement(By.css("#polling-url"));
+    expect(await serverLink.getText()).toMatch(/\/v2$/);
+
+    // verify table loads as expected
+    expect(
+      (await driver.findElements(By.css("#status tr"))).length,
+    ).toBeGreaterThan(1);
+  });
 });

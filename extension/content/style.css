@@ -95,7 +95,7 @@ section.bordered {
   padding-bottom: 10px;
 }
 
-#environment {
+#environment, #apiVersion {
   text-align: center;
 }
 
