@@ -3,8 +3,8 @@
     "remote-settings-devtools@mozilla.com": {
       "updates": [
         {
-          "version": "1.12.0_TBD",
-          "update_link": "https://github.com/mozilla-extensions/remote-settings-devtools/releases/download/1.12.0-build1/remote-settings-devtools.xpi"
+          "version": "2.0.0_TBD",
+          "update_link": "https://github.com/mozilla-extensions/remote-settings-devtools/releases/download/2.0.0-build1/remote-settings-devtools.xpi"
         }
       ]
     }
