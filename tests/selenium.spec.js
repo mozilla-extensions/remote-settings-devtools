@@ -1,10 +1,11 @@
 const { Browser, Builder, By } = require("selenium-webdriver");
-const { Options } = require("selenium-webdriver/firefox");
+const { Context, Options } = require("selenium-webdriver/firefox");
 const FirefoxProfile = require("firefox-profile");
 const path = require("path");
 
 // create a static extension ID so we can find it's config page easily
 const testExtId = "2d7fbdec-9526-402c-badb-2fca5b65dfa8";
+const addonId = "remote-settings-devtools@mozilla.com";
 
 const busyWait = 200; // debounce
 let driver = null;
@@ -22,6 +23,9 @@ beforeAll(async () => {
   options.setBinary(process.env.NIGHTLY_PATH || "/usr/bin/firefox-nightly");
   options.addArguments("--pref 'extensions.experiments.enabled=true'");
   options.addArguments("--headless");
+  // Required to switch WebDriver into the privileged chrome context, which we
+  // use to resolve the extension's moz-extension:// URL below.
+  options.addArguments("-remote-allow-system-access");
   options.setPreference("xpinstall.signatures.required", false);
   options.setPreference("extensions.experiments.enabled", true);
   options.setPreference(
@@ -38,7 +42,21 @@ beforeAll(async () => {
 
   // install the addon
   await driver.installAddon(xpiPath);
-  await driver.get(`moz-extension://${testExtId}/content/index.html`);
+
+  // Since Firefox 152 (bug 2033769), WebDriver:Navigate reports errors instead
+  // of silently ignoring them, and navigating directly to a hardcoded
+  // moz-extension:// URL is rejected with "Navigation to ... is not allowed in
+  // this context". The UUID used in the URL isn't guaranteed to match the
+  // hardcoded one either, so resolve the real extension URL from the privileged
+  // chrome context before navigating to it (see bug 1959376).
+  await driver.setContext(Context.CHROME);
+  const extPageUrl = await driver.executeScript(
+    "return WebExtensionPolicy.getByID(arguments[0]).getURL(arguments[1]);",
+    addonId,
+    "content/index.html",
+  );
+  await driver.setContext(Context.CONTENT);
+  await driver.get(extPageUrl);
 
   // add mutation observer to listen for loading events
   // whenever an event flips from loading to unloading, update a hidden element to debounce
