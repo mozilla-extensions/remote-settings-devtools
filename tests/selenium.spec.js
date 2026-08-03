@@ -1,5 +1,9 @@
 const { Browser, Builder, By } = require("selenium-webdriver");
-const { Context, Options } = require("selenium-webdriver/firefox");
+const {
+  Context,
+  Options,
+  ServiceBuilder,
+} = require("selenium-webdriver/firefox");
 const FirefoxProfile = require("firefox-profile");
 const path = require("path");
 
@@ -23,9 +27,6 @@ beforeAll(async () => {
   options.setBinary(process.env.NIGHTLY_PATH || "/usr/bin/firefox-nightly");
   options.addArguments("--pref 'extensions.experiments.enabled=true'");
   options.addArguments("--headless");
-  // Required to switch WebDriver into the privileged chrome context, which we
-  // use to resolve the extension's moz-extension:// URL below.
-  options.addArguments("-remote-allow-system-access");
   options.setPreference("xpinstall.signatures.required", false);
   options.setPreference("extensions.experiments.enabled", true);
   options.setPreference(
@@ -35,9 +36,16 @@ beforeAll(async () => {
     }),
   );
 
+  // Switching WebDriver into the privileged chrome context (see below) requires
+  // system access. Firefox rejects `-remote-allow-system-access` when it is
+  // passed through capabilities, so it has to be enabled on the geckodriver
+  // process itself.
+  const service = new ServiceBuilder().addArguments("--allow-system-access");
+
   driver = await new Builder()
     .forBrowser(Browser.FIREFOX)
     .setFirefoxOptions(options)
+    .setFirefoxService(service)
     .build();
 
   // install the addon
