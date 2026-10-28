@@ -1,5 +1,5 @@
 # Only used for testing
-FROM node:24-bookworm
+FROM node:26-bookworm
 
 WORKDIR /opt
 
